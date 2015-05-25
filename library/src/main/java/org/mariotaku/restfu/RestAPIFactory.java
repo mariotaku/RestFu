@@ -162,20 +162,14 @@ public class RestAPIFactory {
                         return null;
                     }
                 }
+                if (!response.isSuccessful()) {
+                    onError(null, args, restHttpRequest, parameterTypes, response);
+                    return null;
+                }
                 return converter.convert(response, method.getGenericReturnType());
             } catch (IOException e) {
-                final Exception re = exceptionFactory.newException(e, restHttpRequest, response);
-                if (parameterTypes.length > 0) {
-                    final Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
-                    if (ErrorCallback.class.isAssignableFrom(lastParameterType)) {
-                        final ErrorCallback callback = (ErrorCallback) args[args.length - 1];
-                        if (callback != null) {
-                            callback.error(re);
-                            return null;
-                        }
-                    }
-                }
-                throw re;
+                onError(e, args, restHttpRequest, parameterTypes, response);
+                return null;
             } catch (InvocationTargetException e) {
                 throw new RuntimeException(e);
             } catch (NoSuchMethodException e) {
@@ -185,6 +179,23 @@ public class RestAPIFactory {
             } finally {
                 Utils.closeSilently(response);
             }
+        }
+
+        private void onError(final IOException cause, final Object[] args,
+                             final RestHttpRequest restHttpRequest, final Class<?>[] parameterTypes,
+                             final RestHttpResponse response) throws Exception {
+            final Exception re = exceptionFactory.newException(cause, restHttpRequest, response);
+            if (parameterTypes.length > 0) {
+                final Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
+                if (ErrorCallback.class.isAssignableFrom(lastParameterType)) {
+                    final ErrorCallback callback = (ErrorCallback) args[args.length - 1];
+                    if (callback != null) {
+                        callback.error(re);
+                        return;
+                    }
+                }
+            }
+            throw re;
         }
 
         private static <T> void invokeCallback(final RestCallback<?> callback, final T result) {
