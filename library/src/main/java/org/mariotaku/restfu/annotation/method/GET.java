@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.method;
+package org.mariotaku.restfu.annotation.method;
 
-import org.mariotaku.restfu.RestMethod;
+import org.mariotaku.restfu.annotation.RestMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,9 +28,9 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RestMethod(value = "PUT", hasBody = true)
-public @interface PUT {
-    String METHOD = "PUT";
+@RestMethod(value = "GET", hasBody = false)
+public @interface GET {
+    String METHOD = "GET";
 
     String value();
 }

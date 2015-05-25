@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu;
+package org.mariotaku.restfu.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

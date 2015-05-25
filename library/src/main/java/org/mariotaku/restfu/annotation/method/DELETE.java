@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.param;
+package org.mariotaku.restfu.annotation.method;
+
+import org.mariotaku.restfu.annotation.RestMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,11 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by mariotaku on 15/2/6.
+ * Created by mariotaku on 15/2/7.
  */
-@Target(ElementType.PARAMETER)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Header {
-    String[] value();
-    char arrayDelimiter() default ',';
+@RestMethod(value = "DELETE", hasBody = true)
+public @interface DELETE {
+    String METHOD = "DELETE";
+
+    String value();
 }

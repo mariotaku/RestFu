@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu;
+package org.mariotaku.restfu.annotation.method;
 
-import org.mariotaku.restfu.http.RestHttpResponse;
+import org.mariotaku.restfu.annotation.RestMethod;
 
-import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
-public interface RawCallback extends ErrorCallback {
-    void result(RestHttpResponse result) throws IOException;
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@RestMethod(value = "POST", hasBody = true)
+public @interface POST {
+    String METHOD = "POST";
 
+    String value();
 }

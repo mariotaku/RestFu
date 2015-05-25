@@ -17,12 +17,15 @@
 package org.mariotaku.restfu;
 
 /**
- * Created by mariotaku on 15/5/25.
+ * Creates {@link RestRequestInfo} from {@link RestMethodInfo}
+ * <p/>
+ * Use this method if you want to modify requests <b>before</b> normal HTTP request created.
+ *
+ * <br/>
+ *
+ * When using OAuth authorization, this would be very useful, because normal HTTP request cannot
+ * be modified once OAuth signature generated.
  */
-public class MethodNotImplementedException extends UnsupportedOperationException {
-
-    public MethodNotImplementedException(final String message) {
-        super(message);
-    }
-
+public interface RequestInfoFactory {
+    RestRequestInfo create(RestMethodInfo methodInfo);
 }

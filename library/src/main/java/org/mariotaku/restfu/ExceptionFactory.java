@@ -16,10 +16,14 @@
 
 package org.mariotaku.restfu;
 
-/**
- * Created by mariotaku on 15/2/7.
- */
-public interface ErrorCallback {
+import org.mariotaku.restfu.http.RestHttpRequest;
+import org.mariotaku.restfu.http.RestHttpResponse;
 
-    void error(Throwable t);
+/**
+ * Created by mariotaku on 15/5/25.
+ */
+public interface ExceptionFactory {
+
+    Exception newException(Throwable cause, final RestHttpRequest request, RestHttpResponse response);
+
 }

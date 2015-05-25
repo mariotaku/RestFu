@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.http;
-
-import org.mariotaku.restfu.RestRequestInfo;
+package org.mariotaku.restfu.callback;
 
 /**
- * Created by mariotaku on 15/2/4.
+ * Created by mariotaku on 15/2/7.
  */
-public interface Authorization {
-    String getHeader(Endpoint endpoint, RestRequestInfo info);
+public interface RestCallback<T> extends ErrorCallback {
+    void result(T result);
 
-    boolean hasAuthorization();
 }

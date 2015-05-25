@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu;
+package org.mariotaku.restfu.http;
 
 import org.mariotaku.restfu.http.mime.BaseTypedData;
 import org.mariotaku.restfu.http.mime.TypedData;
-import org.mariotaku.restfu.param.File;
+import org.mariotaku.restfu.annotation.param.File;
 
 /**
  * Created by mariotaku on 15/2/6.

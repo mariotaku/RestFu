@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.param;
+package org.mariotaku.restfu.annotation.param;
+
+import org.mariotaku.restfu.http.BodyType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,10 +26,10 @@ import java.lang.annotation.Target;
 /**
  * Created by mariotaku on 15/2/6.
  */
-@Target(ElementType.PARAMETER)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface File {
-    String contentType() default "";
+public @interface Body {
+    BodyType value();
 
     String encoding() default "";
 }

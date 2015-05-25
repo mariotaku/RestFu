@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.param;
+package org.mariotaku.restfu.annotation.method;
 
-import org.mariotaku.restfu.http.BodyType;
+import org.mariotaku.restfu.annotation.RestMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,12 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by mariotaku on 15/2/6.
+ * Created by mariotaku on 15/2/7.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Body {
-    BodyType value();
+@RestMethod(value = "PUT", hasBody = true)
+public @interface PUT {
+    String METHOD = "PUT";
 
-    String encoding() default "";
+    String value();
 }

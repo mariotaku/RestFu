@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu;
+package org.mariotaku.restfu.exception;
 
+import org.mariotaku.restfu.http.RestHttpRequest;
 import org.mariotaku.restfu.http.RestHttpResponse;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
 public class RestException extends RuntimeException {
+
+    private RestHttpRequest request;
+    private RestHttpResponse response;
+
     public RestException(String message, Throwable cause) {
         super(message, cause);
     }
@@ -37,13 +42,19 @@ public class RestException extends RuntimeException {
         super(cause);
     }
 
-    private RestHttpResponse response;
-
     @Override
     public String toString() {
         return "RestException{" +
                 "response=" + response +
                 "} " + super.toString();
+    }
+
+    public RestHttpRequest getRequest() {
+        return request;
+    }
+
+    public void setRequest(final RestHttpRequest request) {
+        this.request = request;
     }
 
     public RestHttpResponse getResponse() {
@@ -53,4 +64,5 @@ public class RestException extends RuntimeException {
     public void setResponse(RestHttpResponse response) {
         this.response = response;
     }
+
 }

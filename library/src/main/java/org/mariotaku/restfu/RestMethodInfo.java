@@ -19,17 +19,20 @@ package org.mariotaku.restfu;
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
+import org.mariotaku.restfu.annotation.RestMethod;
+import org.mariotaku.restfu.exception.MethodNotImplementedException;
+import org.mariotaku.restfu.http.FileValue;
 import org.mariotaku.restfu.http.ValueMap;
 import org.mariotaku.restfu.http.mime.BaseTypedData;
 import org.mariotaku.restfu.http.mime.TypedData;
-import org.mariotaku.restfu.param.Body;
-import org.mariotaku.restfu.param.Extra;
-import org.mariotaku.restfu.param.File;
-import org.mariotaku.restfu.param.Form;
-import org.mariotaku.restfu.param.Header;
-import org.mariotaku.restfu.param.Part;
-import org.mariotaku.restfu.param.Path;
-import org.mariotaku.restfu.param.Query;
+import org.mariotaku.restfu.annotation.param.Body;
+import org.mariotaku.restfu.annotation.param.Extra;
+import org.mariotaku.restfu.annotation.param.File;
+import org.mariotaku.restfu.annotation.param.Form;
+import org.mariotaku.restfu.annotation.param.Header;
+import org.mariotaku.restfu.annotation.param.Part;
+import org.mariotaku.restfu.annotation.param.Path;
+import org.mariotaku.restfu.annotation.param.Query;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -38,9 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by mariotaku on 15/2/6.
- */
 public final class RestMethodInfo {
 
     private final RestMethod method;
@@ -58,7 +58,6 @@ public final class RestMethodInfo {
     private ArrayList<Pair<String, String>> queriesCache, formsCache, headersCache;
     private ArrayList<Pair<String, TypedData>> partsCache;
     private Map<String, Object> extrasCache;
-    private TypedData bodyCache;
 
     RestMethodInfo(final RestMethod method, String path, final Body body, final HashMap<Path, Object> paths, final HashMap<Query, Object> queries,
                    final HashMap<Header, Object> headers, final HashMap<Form, Object> forms, final HashMap<Part, Object> parts,
@@ -335,13 +334,9 @@ public final class RestMethodInfo {
         return null;
     }
 
-    public RequestInfo toRequestInfo() {
-        return new RequestInfo(getMethod().value(), getPath(), getQueries(), getForms(),
+    public RestRequestInfo toRequestInfo() {
+        return new RestRequestInfo(getMethod().value(), getPath(), getQueries(), getForms(),
                 getHeaders(), getParts(), getFile(), getBody(), getExtras());
-    }
-
-    public RequestInfo toRequestInfo(RequestInfo.Factory factory) {
-        return factory.create(this);
     }
 
     public Body getBody() {

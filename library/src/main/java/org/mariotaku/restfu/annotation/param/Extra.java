@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.param;
+package org.mariotaku.restfu.annotation.param;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Query {
-    String[] value() default {};
-    char arrayDelimiter() default ',';
+public @interface Extra {
+    String[] value();
 }

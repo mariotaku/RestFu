@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.http;
+package org.mariotaku.restfu.annotation.param;
 
-import org.mariotaku.restfu.RestRequestInfo;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Created by mariotaku on 15/2/4.
+ * Created by mariotaku on 15/2/6.
  */
-public interface Authorization {
-    String getHeader(Endpoint endpoint, RestRequestInfo info);
-
-    boolean hasAuthorization();
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Query {
+    String[] value() default {};
+    char arrayDelimiter() default ',';
 }

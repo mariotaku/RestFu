@@ -19,19 +19,16 @@ package org.mariotaku.restfu;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 
+import org.mariotaku.restfu.http.FileValue;
 import org.mariotaku.restfu.http.mime.FormTypedBody;
 import org.mariotaku.restfu.http.mime.MultipartTypedBody;
 import org.mariotaku.restfu.http.mime.TypedData;
-import org.mariotaku.restfu.param.Body;
+import org.mariotaku.restfu.annotation.param.Body;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by mariotaku on 15/5/11.
- */
-public final class RequestInfo {
-
+public final class RestRequestInfo {
 
     private String method;
     private String path;
@@ -44,9 +41,9 @@ public final class RequestInfo {
 
     private TypedData bodyCache;
 
-    public RequestInfo(String method, String path, List<Pair<String, String>> queries,
-                       List<Pair<String, String>> forms, List<Pair<String, String>> headers,
-                       List<Pair<String, TypedData>> parts, FileValue file, Body body, Map<String, Object> extras) {
+    public RestRequestInfo(String method, String path, List<Pair<String, String>> queries,
+                           List<Pair<String, String>> forms, List<Pair<String, String>> headers,
+                           List<Pair<String, TypedData>> parts, FileValue file, Body body, Map<String, Object> extras) {
         this.method = method;
         this.path = path;
         this.queries = queries;
@@ -107,7 +104,4 @@ public final class RequestInfo {
         return method;
     }
 
-    public interface Factory {
-        RequestInfo create(RestMethodInfo methodInfo);
-    }
 }

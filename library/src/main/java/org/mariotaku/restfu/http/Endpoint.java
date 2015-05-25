@@ -18,7 +18,7 @@ package org.mariotaku.restfu.http;
 
 import android.util.Pair;
 
-import org.mariotaku.restfu.RequestInfo;
+import org.mariotaku.restfu.RestRequestInfo;
 import org.mariotaku.restfu.Utils;
 
 import java.util.Arrays;
@@ -39,7 +39,7 @@ public class Endpoint {
         this.url = url;
     }
 
-    public static String constructUrl(String endpoint, RequestInfo requestInfo) {
+    public static String constructUrl(String endpoint, RestRequestInfo requestInfo) {
         return constructUrl(endpoint, requestInfo.getPath(), requestInfo.getQueries());
     }
 

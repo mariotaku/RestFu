@@ -20,7 +20,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 
-import org.mariotaku.restfu.RequestInfo;
+import org.mariotaku.restfu.HttpRequestFactory;
+import org.mariotaku.restfu.RestRequestInfo;
 import org.mariotaku.restfu.http.mime.TypedData;
 
 import java.util.ArrayList;
@@ -115,15 +116,11 @@ public final class RestHttpRequest {
         }
     }
 
-    public interface Factory {
-        RestHttpRequest create(@NonNull Endpoint endpoint, @NonNull RequestInfo info, @Nullable Authorization authorization);
-    }
 
-
-    public static final class DefaultFactory implements Factory {
+    public static final class DefaultFactory implements HttpRequestFactory {
 
         @Override
-        public RestHttpRequest create(@NonNull Endpoint endpoint, @NonNull RequestInfo requestInfo, @Nullable Authorization authorization) {
+        public RestHttpRequest create(@NonNull Endpoint endpoint, @NonNull RestRequestInfo requestInfo, @Nullable Authorization authorization) {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
             final ArrayList<Pair<String, String>> headers = new ArrayList<>(requestInfo.getHeaders());
 

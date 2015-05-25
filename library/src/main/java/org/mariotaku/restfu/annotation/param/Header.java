@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.method;
-
-import org.mariotaku.restfu.RestMethod;
+package org.mariotaku.restfu.annotation.param;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,13 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by mariotaku on 15/2/7.
+ * Created by mariotaku on 15/2/6.
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@RestMethod(value = "GET", hasBody = false)
-public @interface GET {
-    String METHOD = "GET";
-
-    String value();
+public @interface Header {
+    String[] value();
+    char arrayDelimiter() default ',';
 }

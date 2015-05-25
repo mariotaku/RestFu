@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.param;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.mariotaku.restfu.callback;
 
 /**
- * Created by mariotaku on 15/2/6.
+ * Created by mariotaku on 15/2/7.
  */
-@Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Part {
-    String[] value();
-    char arrayDelimiter() default ',';
+public interface ErrorCallback {
+
+    void error(Throwable t);
 }
