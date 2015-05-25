@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 /**
@@ -37,9 +38,13 @@ public class StringTypedData implements TypedData {
     private final byte[] data;
     private ByteArrayInputStream is;
 
-    public StringTypedData(String string, Charset charset) {
+    public StringTypedData(@NonNull String string, @NonNull Charset charset) {
         this.contentType = ContentType.parse("text/plain").charset(charset);
-        this.data = string.getBytes(charset);
+        try {
+            this.data = string.getBytes(charset.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Nullable
