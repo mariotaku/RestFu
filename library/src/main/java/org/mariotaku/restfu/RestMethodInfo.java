@@ -1,9 +1,24 @@
+/*
+ * Copyright (c) 2015 mariotaku
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.mariotaku.restfu;
 
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.mariotaku.restfu.http.ValueMap;
 import org.mariotaku.restfu.http.mime.BaseTypedData;
 import org.mariotaku.restfu.http.mime.TypedData;
@@ -128,7 +143,7 @@ public final class RestMethodInfo {
 
     private static void checkMethod(RestMethod restMethod, Body body, HashMap<Form, Object> forms, HashMap<Part, Object> parts, FileValue file) {
         if (restMethod == null)
-            throw new NotImplementedException("Method must has annotation annotated with @RestMethod");
+            throw new MethodNotImplementedException("Method must has annotation annotated with @RestMethod");
         if (restMethod.hasBody() && body == null) {
             throw new IllegalArgumentException("@Body required for method " + restMethod.value());
         } else if (!restMethod.hasBody() && body != null) {

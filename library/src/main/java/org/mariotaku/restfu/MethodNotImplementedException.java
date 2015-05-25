@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.method;
-
-import org.mariotaku.restfu.RestMethod;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.mariotaku.restfu;
 
 /**
- * Created by mariotaku on 15/2/7.
+ * Created by mariotaku on 15/5/25.
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-@RestMethod(value = "DELETE", hasBody = true)
-public @interface DELETE {
-    String METHOD = "DELETE";
+public class MethodNotImplementedException extends UnsupportedOperationException {
 
-    String value();
+    public MethodNotImplementedException(final String message) {
+        super(message);
+    }
+
 }
