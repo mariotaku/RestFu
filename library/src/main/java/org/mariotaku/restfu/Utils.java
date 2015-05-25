@@ -18,6 +18,7 @@ package org.mariotaku.restfu;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,6 +117,26 @@ public class Utils {
         os.flush();
         return true;
     }
+
+
+    public static void parseGetParameters(final String queryString, final List<Pair<String, String>> params,
+                                          final String encoding) {
+        final String[] queryStrings = split(queryString, "&");
+        try {
+            for (final String query : queryStrings) {
+                final String[] split = split(query, "=");
+                final String key = URLDecoder.decode(split[0], encoding);
+                if (split.length == 2) {
+                    params.add(Pair.create(key, URLDecoder.decode(split[1], encoding)));
+                } else {
+                    params.add(Pair.create(key, ""));
+                }
+            }
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @NonNull
     public static <T> T assertNotNull(@Nullable T obj) {
