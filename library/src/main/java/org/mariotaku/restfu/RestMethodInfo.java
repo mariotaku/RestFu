@@ -20,11 +20,6 @@ import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import org.mariotaku.restfu.annotation.RestMethod;
-import org.mariotaku.restfu.exception.MethodNotImplementedException;
-import org.mariotaku.restfu.http.FileValue;
-import org.mariotaku.restfu.http.ValueMap;
-import org.mariotaku.restfu.http.mime.BaseTypedData;
-import org.mariotaku.restfu.http.mime.TypedData;
 import org.mariotaku.restfu.annotation.param.Body;
 import org.mariotaku.restfu.annotation.param.Extra;
 import org.mariotaku.restfu.annotation.param.File;
@@ -33,9 +28,16 @@ import org.mariotaku.restfu.annotation.param.Header;
 import org.mariotaku.restfu.annotation.param.Part;
 import org.mariotaku.restfu.annotation.param.Path;
 import org.mariotaku.restfu.annotation.param.Query;
+import org.mariotaku.restfu.exception.MethodNotImplementedException;
+import org.mariotaku.restfu.http.FileValue;
+import org.mariotaku.restfu.http.ValueMap;
+import org.mariotaku.restfu.http.mime.BaseTypedData;
+import org.mariotaku.restfu.http.mime.TypedData;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -279,9 +281,11 @@ public final class RestMethodInfo {
 
     @NonNull
     public String getPath() {
-        StringBuilder sb = new StringBuilder();
+        final int queryIndex = path.indexOf('?');
+        final StringBuilder sb = new StringBuilder();
         int start, end, prevEnd = -1;
         while ((start = path.indexOf('{', prevEnd)) != -1 && (end = path.indexOf('}', start)) != -1) {
+            if (queryIndex != -1 && start >= queryIndex) break;
             sb.append(path.substring(prevEnd + 1, start));
             final String key = path.substring(start + 1, end);
             final String replacement = findPathReplacement(key);
@@ -290,7 +294,11 @@ public final class RestMethodInfo {
             sb.append(replacement);
             prevEnd = end;
         }
-        sb.append(path.substring(prevEnd + 1));
+        if (queryIndex != -1) {
+            sb.append(path.substring(prevEnd + 1, queryIndex));
+        } else {
+            sb.append(path.substring(prevEnd + 1));
+        }
         return sb.toString();
     }
 
@@ -298,6 +306,10 @@ public final class RestMethodInfo {
     public List<Pair<String, String>> getQueries() {
         if (queriesCache != null) return queriesCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
+        final int queryIndex = path.indexOf('?');
+        if (queryIndex != -1) {
+            Utils.parseGetParameters(path.substring(queryIndex + 1), list, Charset.defaultCharset().name());
+        }
         for (Map.Entry<Query, Object> entry : queries.entrySet()) {
             final Query form = entry.getKey();
             final Object value = entry.getValue();
@@ -306,7 +318,14 @@ public final class RestMethodInfo {
                 final ValueMap valueMap = (ValueMap) value;
                 for (String key : getValueMapKeys(form.value(), valueMap)) {
                     if (valueMap.has(key)) {
-                        list.add(Pair.create(key, String.valueOf(valueMap.get(key))));
+                        final Object mapValue = valueMap.get(key);
+                        if (mapValue.getClass().isArray()) {
+                            for (int i = 0, j = Array.getLength(mapValue); i < j; i++) {
+                                list.add(Pair.create(key, String.valueOf(Array.get(mapValue, i))));
+                            }
+                        } else {
+                            list.add(Pair.create(key, String.valueOf(mapValue)));
+                        }
                     }
                 }
             } else {
