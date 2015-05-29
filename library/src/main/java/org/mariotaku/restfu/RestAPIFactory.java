@@ -16,6 +16,8 @@
 
 package org.mariotaku.restfu;
 
+import android.support.annotation.Nullable;
+
 import org.mariotaku.restfu.callback.ErrorCallback;
 import org.mariotaku.restfu.callback.RawCallback;
 import org.mariotaku.restfu.callback.RestCallback;
@@ -207,7 +209,8 @@ public class RestAPIFactory {
     public static final class DefaultExceptionFactory implements ExceptionFactory {
 
         @Override
-        public Exception newException(Throwable cause, final RestHttpRequest request, RestHttpResponse response) {
+        public Exception newException(@Nullable Throwable cause, @Nullable final RestHttpRequest request,
+                                      @Nullable final RestHttpResponse response) {
             final RestException e = new RestException(cause);
             e.setRequest(request);
             e.setResponse(response);

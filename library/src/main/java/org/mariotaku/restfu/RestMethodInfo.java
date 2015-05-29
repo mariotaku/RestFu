@@ -49,21 +49,22 @@ public final class RestMethodInfo {
     private final String path;
     private final Body body;
 
-    private final HashMap<Path, Object> paths;
-    private final HashMap<Query, Object> queries;
-    private final HashMap<Header, Object> headers;
-    private final HashMap<Form, Object> forms;
-    private final HashMap<Part, Object> parts;
-    private final HashMap<Extra, Object> extras;
+    private final ArrayList<Pair<Path, Object>> paths;
+    private final ArrayList<Pair<Query, Object>> queries;
+    private final ArrayList<Pair<Header, Object>> headers;
+    private final ArrayList<Pair<Form, Object>> forms;
+    private final ArrayList<Pair<Part, Object>> parts;
+    private final ArrayList<Pair<Extra, Object>> extras;
     private final FileValue file;
 
     private ArrayList<Pair<String, String>> queriesCache, formsCache, headersCache;
     private ArrayList<Pair<String, TypedData>> partsCache;
     private Map<String, Object> extrasCache;
 
-    RestMethodInfo(final RestMethod method, String path, final Body body, final HashMap<Path, Object> paths, final HashMap<Query, Object> queries,
-                   final HashMap<Header, Object> headers, final HashMap<Form, Object> forms, final HashMap<Part, Object> parts,
-                   final FileValue file, HashMap<Extra, Object> extras) {
+    RestMethodInfo(final RestMethod method, String path, final Body body, final ArrayList<Pair<Path, Object>> paths,
+                   final ArrayList<Pair<Query, Object>> queries, final ArrayList<Pair<Header, Object>> headers,
+                   final ArrayList<Pair<Form, Object>> forms, final ArrayList<Pair<Part, Object>> parts,
+                   final FileValue file, ArrayList<Pair<Extra, Object>> extras) {
         this.method = method;
         this.path = path;
         this.body = body;
@@ -92,34 +93,34 @@ public final class RestMethodInfo {
             }
         }
         final Body body = method.getAnnotation(Body.class);
-        final HashMap<Path, Object> paths = new HashMap<>();
-        final HashMap<Query, Object> queries = new HashMap<>();
-        final HashMap<Header, Object> headers = new HashMap<>();
-        final HashMap<Form, Object> forms = new HashMap<>();
-        final HashMap<Part, Object> parts = new HashMap<>();
-        final HashMap<Extra, Object> extras = new HashMap<>();
+        final ArrayList<Pair<Path, Object>> paths = new ArrayList<>();
+        final ArrayList<Pair<Query, Object>> queries = new ArrayList<>();
+        final ArrayList<Pair<Header, Object>> headers = new ArrayList<>();
+        final ArrayList<Pair<Form, Object>> forms = new ArrayList<>();
+        final ArrayList<Pair<Part, Object>> parts = new ArrayList<>();
+        final ArrayList<Pair<Extra, Object>> extras = new ArrayList<>();
         FileValue file = null;
         final Annotation[][] annotations = method.getParameterAnnotations();
         for (int i = 0, j = annotations.length; i < j; i++) {
             final Path path = getAnnotation(annotations[i], Path.class);
             if (path != null) {
-                paths.put(path, args[i]);
+                paths.add(Pair.create(path, args[i]));
             }
             final Query query = getAnnotation(annotations[i], Query.class);
             if (query != null) {
-                queries.put(query, args[i]);
+                queries.add(Pair.create(query, args[i]));
             }
             final Header header = getAnnotation(annotations[i], Header.class);
             if (header != null) {
-                headers.put(header, args[i]);
+                headers.add(Pair.create(header, args[i]));
             }
             final Form form = getAnnotation(annotations[i], Form.class);
             if (form != null) {
-                forms.put(form, args[i]);
+                forms.add(Pair.create(form, args[i]));
             }
             final Part part = getAnnotation(annotations[i], Part.class);
             if (part != null) {
-                parts.put(part, args[i]);
+                parts.add(Pair.create(part, args[i]));
             }
             final File paramFile = getAnnotation(annotations[i], File.class);
             if (paramFile != null) {
@@ -131,7 +132,7 @@ public final class RestMethodInfo {
             }
             final Extra extra = getAnnotation(annotations[i], Extra.class);
             if (extra != null) {
-                extras.put(extra, args[i]);
+                extras.add(Pair.create(extra, args[i]));
             }
         }
         checkMethod(restMethod, body, forms, parts, file);
@@ -142,7 +143,8 @@ public final class RestMethodInfo {
         return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
     }
 
-    private static void checkMethod(RestMethod restMethod, Body body, HashMap<Form, Object> forms, HashMap<Part, Object> parts, FileValue file) {
+    private static void checkMethod(RestMethod restMethod, Body body, ArrayList<Pair<Form, Object>> forms,
+                                    ArrayList<Pair<Part, Object>> parts, FileValue file) {
         if (restMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @RestMethod");
         if (restMethod.hasBody() && body == null) {
@@ -190,9 +192,9 @@ public final class RestMethodInfo {
     public Map<String, Object> getExtras() {
         if (extrasCache != null) return extrasCache;
         final Map<String, Object> map = new HashMap<>();
-        for (Map.Entry<Extra, Object> entry : extras.entrySet()) {
-            final Extra extra = entry.getKey();
-            final Object value = entry.getValue();
+        for (Pair<Extra, Object> entry : extras) {
+            final Extra extra = entry.first;
+            final Object value = entry.second;
             if (value instanceof ValueMap) {
                 final ValueMap valueMap = (ValueMap) value;
                 for (String key : getValueMapKeys(extra.value(), valueMap)) {
@@ -213,9 +215,9 @@ public final class RestMethodInfo {
     public List<Pair<String, String>> getForms() {
         if (formsCache != null) return formsCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
-        for (Map.Entry<Form, Object> entry : forms.entrySet()) {
-            final Form form = entry.getKey();
-            final Object value = entry.getValue();
+        for (Pair<Form, Object> entry : forms) {
+            final Form form = entry.first;
+            final Object value = entry.second;
             if (value == null) continue;
             if (value instanceof ValueMap) {
                 final ValueMap valueMap = (ValueMap) value;
@@ -239,10 +241,10 @@ public final class RestMethodInfo {
     public List<Pair<String, TypedData>> getParts() {
         if (partsCache != null) return partsCache;
         final ArrayList<Pair<String, TypedData>> list = new ArrayList<>();
-        for (Map.Entry<Part, Object> entry : parts.entrySet()) {
-            final Part part = entry.getKey();
+        for (Pair<Part, Object> entry : parts) {
+            final Part part = entry.first;
             final String[] names = part.value();
-            final Object value = entry.getValue();
+            final Object value = entry.second;
             if (value instanceof TypedData) {
                 list.add(Pair.create(names[0], (TypedData) value));
             } else if (value != null) {
@@ -256,9 +258,9 @@ public final class RestMethodInfo {
     public List<Pair<String, String>> getHeaders() {
         if (headersCache != null) return headersCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
-        for (Map.Entry<Header, Object> entry : headers.entrySet()) {
-            final Header header = entry.getKey();
-            final Object value = entry.getValue();
+        for (Pair<Header, Object> entry : headers) {
+            final Header header = entry.first;
+            final Object value = entry.second;
             if (value instanceof ValueMap) {
                 final ValueMap valueMap = (ValueMap) value;
                 for (String key : getValueMapKeys(header.value(), valueMap)) {
@@ -310,13 +312,11 @@ public final class RestMethodInfo {
         if (queryIndex != -1) {
             Utils.parseGetParameters(path.substring(queryIndex + 1), list, Charset.defaultCharset().name());
         }
-        for (Map.Entry<Query, Object> entry : queries.entrySet()) {
-            final Query form = entry.getKey();
-            final Object value = entry.getValue();
-            if (value == null) continue;
-            if (value instanceof ValueMap) {
-                final ValueMap valueMap = (ValueMap) value;
-                for (String key : getValueMapKeys(form.value(), valueMap)) {
+        for (Pair<Query, Object> entry : queries) {
+            if (entry.second == null) continue;
+            if (entry.second instanceof ValueMap) {
+                final ValueMap valueMap = (ValueMap) entry.second;
+                for (String key : getValueMapKeys(entry.first.value(), valueMap)) {
                     if (valueMap.has(key)) {
                         final Object mapValue = valueMap.get(key);
                         if (mapValue.getClass().isArray()) {
@@ -329,9 +329,9 @@ public final class RestMethodInfo {
                     }
                 }
             } else {
-                final char delimiter = form.arrayDelimiter();
-                String valueString = Utils.toString(value, delimiter);
-                for (String key : form.value()) {
+                final char delimiter = entry.first.arrayDelimiter();
+                String valueString = Utils.toString(entry.second, delimiter);
+                for (String key : entry.first.value()) {
                     list.add(Pair.create(key, valueString));
                 }
             }
@@ -340,13 +340,12 @@ public final class RestMethodInfo {
     }
 
     private String findPathReplacement(String key) {
-        for (Map.Entry<Path, Object> entry : paths.entrySet()) {
-            final Path path = entry.getKey();
-            if (key.equals(path.value())) {
-                if (path.encoded()) {
-                    return String.valueOf(entry.getValue());
+        for (Pair<Path, Object> entry : paths) {
+            if (key.equals(entry.first.value())) {
+                if (entry.first.encoded()) {
+                    return String.valueOf(entry.second);
                 } else {
-                    return Utils.encode(String.valueOf(entry.getValue()), "UTF-8");
+                    return Utils.encode(String.valueOf(entry.second), "UTF-8");
                 }
             }
         }
