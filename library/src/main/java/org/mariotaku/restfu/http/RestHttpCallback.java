@@ -27,4 +27,5 @@ public interface RestHttpCallback {
 
     void exception(IOException ioe);
 
+    void cancelled();
 }

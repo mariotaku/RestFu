@@ -171,6 +171,11 @@ public class RestAPIFactory {
                             public void exception(final IOException ioe) {
                                 callback.error(ioe);
                             }
+
+                            @Override
+                            public void cancelled() {
+
+                            }
                         });
                         return null;
                     } else if (RawCallback.class.isAssignableFrom(lastParameterType)) {
@@ -188,6 +193,11 @@ public class RestAPIFactory {
                             @Override
                             public void exception(final IOException ioe) {
                                 callback.error(ioe);
+                            }
+
+                            @Override
+                            public void cancelled() {
+
                             }
                         });
                         return null;
