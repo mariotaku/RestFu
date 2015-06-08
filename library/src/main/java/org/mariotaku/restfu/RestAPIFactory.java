@@ -24,6 +24,7 @@ import org.mariotaku.restfu.callback.RestCallback;
 import org.mariotaku.restfu.exception.RestException;
 import org.mariotaku.restfu.http.Authorization;
 import org.mariotaku.restfu.http.Endpoint;
+import org.mariotaku.restfu.http.RestHttpCallback;
 import org.mariotaku.restfu.http.RestHttpClient;
 import org.mariotaku.restfu.http.RestHttpRequest;
 import org.mariotaku.restfu.http.RestHttpResponse;
@@ -137,7 +138,7 @@ public class RestAPIFactory {
 
         @SuppressWarnings({"TryWithIdenticalCatches"})
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Exception {
             final RestMethodInfo methodInfo = RestMethodInfo.get(method, args);
             final RestRequestInfo requestInfo;
             if (requestInfoFactory != null) {
@@ -154,13 +155,41 @@ public class RestAPIFactory {
                     final Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
                     if (RestCallback.class.isAssignableFrom(lastParameterType)) {
                         final RestCallback<?> callback = (RestCallback<?>) args[args.length - 1];
-                        if (callback != null) {
-                            invokeCallback(callback, converter.convert(response, method.getGenericReturnType()));
-                        }
+                        restClient.enqueue(restHttpRequest, new RestHttpCallback() {
+                            @Override
+                            public void callback(final RestHttpResponse response) {
+                                if (callback != null) {
+                                    try {
+                                        invokeCallback(callback, converter.convert(response, method.getGenericReturnType()));
+                                    } catch (Exception e) {
+                                        callback.error(e);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void exception(final IOException ioe) {
+                                callback.error(ioe);
+                            }
+                        });
                         return null;
                     } else if (RawCallback.class.isAssignableFrom(lastParameterType)) {
                         final RawCallback callback = (RawCallback) args[args.length - 1];
-                        callback.result(response);
+                        restClient.enqueue(restHttpRequest, new RestHttpCallback() {
+                            @Override
+                            public void callback(final RestHttpResponse response) {
+                                try {
+                                    callback.result(response);
+                                } catch (IOException e) {
+                                    callback.error(e);
+                                }
+                            }
+
+                            @Override
+                            public void exception(final IOException ioe) {
+                                callback.error(ioe);
+                            }
+                        });
                         return null;
                     }
                 }

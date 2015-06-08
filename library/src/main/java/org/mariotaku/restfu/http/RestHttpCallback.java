@@ -16,18 +16,15 @@
 
 package org.mariotaku.restfu.http;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 
 /**
- * Created by mariotaku on 15/2/7.
+ * Created by mariotaku on 15/6/8.
  */
-public interface RestHttpClient {
+public interface RestHttpCallback {
 
-    @NonNull
-    RestHttpResponse execute(RestHttpRequest request) throws IOException;
+    void callback(RestHttpResponse response);
 
-    void enqueue(RestHttpRequest request, RestHttpCallback callback);
+    void exception(IOException ioe);
 
 }
