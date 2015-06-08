@@ -16,18 +16,13 @@
 
 package org.mariotaku.restfu.http;
 
-import android.support.annotation.NonNull;
-
-import java.io.IOException;
-
 /**
- * Created by mariotaku on 15/2/7.
+ * Created by mariotaku on 15/6/8.
  */
-public interface RestHttpClient {
+public interface RestQueuedRequest {
 
-    @NonNull
-    RestHttpResponse execute(RestHttpRequest request) throws IOException;
+    boolean isCancelled();
 
-    RestQueuedRequest enqueue(RestHttpRequest request, RestHttpCallback callback);
+    void cancel();
 
 }
