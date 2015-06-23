@@ -25,6 +25,7 @@ import org.mariotaku.restfu.annotation.param.Extra;
 import org.mariotaku.restfu.annotation.param.File;
 import org.mariotaku.restfu.annotation.param.Form;
 import org.mariotaku.restfu.annotation.param.Header;
+import org.mariotaku.restfu.annotation.param.MethodExtra;
 import org.mariotaku.restfu.annotation.param.Part;
 import org.mariotaku.restfu.annotation.param.Path;
 import org.mariotaku.restfu.annotation.param.Query;
@@ -56,6 +57,7 @@ public final class RestMethodInfo {
     private final ArrayList<Pair<Part, Object>> parts;
     private final ArrayList<Pair<Extra, Object>> extras;
     private final FileValue file;
+    private final MethodExtra methodExtra;
 
     private ArrayList<Pair<String, String>> queriesCache, formsCache, headersCache;
     private ArrayList<Pair<String, TypedData>> partsCache;
@@ -64,7 +66,7 @@ public final class RestMethodInfo {
     RestMethodInfo(final RestMethod method, String path, final Body body, final ArrayList<Pair<Path, Object>> paths,
                    final ArrayList<Pair<Query, Object>> queries, final ArrayList<Pair<Header, Object>> headers,
                    final ArrayList<Pair<Form, Object>> forms, final ArrayList<Pair<Part, Object>> parts,
-                   final FileValue file, ArrayList<Pair<Extra, Object>> extras) {
+                   final FileValue file, final ArrayList<Pair<Extra, Object>> extras, final MethodExtra methodExtra) {
         this.method = method;
         this.path = path;
         this.body = body;
@@ -75,6 +77,7 @@ public final class RestMethodInfo {
         this.parts = parts;
         this.extras = extras;
         this.file = file;
+        this.methodExtra = methodExtra;
     }
 
     static RestMethodInfo get(Method method, Object[] args) {
@@ -135,8 +138,9 @@ public final class RestMethodInfo {
                 extras.add(Pair.create(extra, args[i]));
             }
         }
+        final MethodExtra methodExtra = method.getAnnotation(MethodExtra.class);
         checkMethod(restMethod, body, forms, parts, file);
-        return new RestMethodInfo(restMethod, pathFormat, body, paths, queries, headers, forms, parts, file, extras);
+        return new RestMethodInfo(restMethod, pathFormat, body, paths, queries, headers, forms, parts, file, extras, methodExtra);
     }
 
     private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
@@ -279,6 +283,10 @@ public final class RestMethodInfo {
 
     public RestMethod getMethod() {
         return method;
+    }
+
+    public MethodExtra getMethodExtra() {
+        return methodExtra;
     }
 
     @NonNull
