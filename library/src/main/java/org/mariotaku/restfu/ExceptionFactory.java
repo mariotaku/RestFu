@@ -16,6 +16,8 @@
 
 package org.mariotaku.restfu;
 
+import android.support.annotation.Nullable;
+
 import org.mariotaku.restfu.http.RestHttpRequest;
 import org.mariotaku.restfu.http.RestHttpResponse;
 
@@ -24,6 +26,6 @@ import org.mariotaku.restfu.http.RestHttpResponse;
  */
 public interface ExceptionFactory {
 
-    Exception newException(Throwable cause, final RestHttpRequest request, RestHttpResponse response);
+    Exception newException(@Nullable Throwable cause, final RestHttpRequest request, RestHttpResponse response);
 
 }

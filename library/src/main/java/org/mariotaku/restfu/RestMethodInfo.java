@@ -147,7 +147,7 @@ public final class RestMethodInfo {
                                     ArrayList<Pair<Part, Object>> parts, FileValue file) {
         if (restMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @RestMethod");
-        if (restMethod.hasBody() && body == null) {
+        if (restMethod.hasBody() && body == null && (!forms.isEmpty() || !parts.isEmpty() || file != null)) {
             throw new IllegalArgumentException("@Body required for method " + restMethod.value());
         } else if (!restMethod.hasBody() && body != null) {
             throw new IllegalArgumentException(restMethod.value() + " does not allow body");

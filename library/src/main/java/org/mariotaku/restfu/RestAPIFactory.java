@@ -222,7 +222,7 @@ public class RestAPIFactory {
             }
         }
 
-        private void onError(final IOException cause, final Object[] args,
+        private void onError(@Nullable final IOException cause, final Object[] args,
                              final RestHttpRequest restHttpRequest, final Class<?>[] parameterTypes,
                              final RestHttpResponse response) throws Exception {
             final Exception re = exceptionFactory.newException(cause, restHttpRequest, response);

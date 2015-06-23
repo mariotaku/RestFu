@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RestMethod(value = "DELETE", hasBody = true)
+@RestMethod(value = "DELETE", hasBody = false)
 public @interface DELETE {
     String METHOD = "DELETE";
 
