@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * Created by mariotaku on 15/2/6.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MethodExtra {
     String name();

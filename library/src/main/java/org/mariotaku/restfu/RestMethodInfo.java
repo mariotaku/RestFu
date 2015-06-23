@@ -138,9 +138,13 @@ public final class RestMethodInfo {
                 extras.add(Pair.create(extra, args[i]));
             }
         }
-        final MethodExtra methodExtra = method.getAnnotation(MethodExtra.class);
+        MethodExtra methodExtra = method.getAnnotation(MethodExtra.class);
+        if (methodExtra == null) {
+            methodExtra = method.getDeclaringClass().getAnnotation(MethodExtra.class);
+        }
         checkMethod(restMethod, body, forms, parts, file);
-        return new RestMethodInfo(restMethod, pathFormat, body, paths, queries, headers, forms, parts, file, extras, methodExtra);
+        return new RestMethodInfo(restMethod, pathFormat, body, paths, queries, headers, forms, parts,
+                file, extras, methodExtra);
     }
 
     private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
