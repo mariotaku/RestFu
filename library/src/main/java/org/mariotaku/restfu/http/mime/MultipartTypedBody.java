@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +36,21 @@ import java.util.UUID;
  * Created by mariotaku on 15/5/5.
  */
 public class MultipartTypedBody implements TypedData {
+
+    public static final byte[] CONTENT_DISPOSITION;
+    public static final byte[] CONTENT_TYPE;
+    public static final byte[] CONTENT_LENGTH;
+
+    static {
+        try {
+            CONTENT_DISPOSITION = "Content-Disposition".getBytes("ASCII");
+            CONTENT_TYPE = "Content-Type".getBytes("ASCII");
+            CONTENT_LENGTH = "Content-Length".getBytes("ASCII");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError();
+        }
+    }
+
     private final List<Pair<String, TypedData>> parts;
     private final ContentType contentType;
 
@@ -42,7 +58,7 @@ public class MultipartTypedBody implements TypedData {
     private static final byte[] COLONSPACE = {':', ' '};
     private static final byte[] CRLF = {'\r', '\n'};
     private static final byte[] DASHDASH = {'-', '-'};
-    private final String boundary;
+    private final byte[] boundaryBytes;
 
     private boolean lengthSet;
     private long length;
@@ -50,8 +66,9 @@ public class MultipartTypedBody implements TypedData {
     public MultipartTypedBody(List<Pair<String, TypedData>> parts) {
         this.parts = parts;
         this.contentType = ContentType.parse("multipart/form-data");
-        boundary = Utils.bytesToHex(UUID.randomUUID().toString().getBytes());
+        final String boundary = Utils.bytesToHex(UUID.randomUUID().toString().getBytes());
         contentType.addParameter("boundary", boundary);
+        boundaryBytes = boundary.getBytes();
     }
 
     public MultipartTypedBody() {
@@ -75,10 +92,43 @@ public class MultipartTypedBody implements TypedData {
     @Override
     public long length() throws IOException {
         if (!lengthSet) {
-            length = 0;
+            long tempLength = 0;
             for (Pair<String, TypedData> part : parts) {
-                length += part.second.length();
+                tempLength += DASHDASH.length;
+                tempLength += boundaryBytes.length;
+                tempLength += CRLF.length;
+                final ContentType contentDisposition = new ContentType("form-data").parameter("name", part.first);
+                final ContentType contentType = part.second.contentType();
+                final long contentLength = part.second.length();
+                if (contentLength < 0) return -1;
+                if (part.second instanceof FileTypedData) {
+                    contentDisposition.addParameter("filename", ((FileTypedData) part.second).fileName());
+                }
+                tempLength += CONTENT_DISPOSITION.length;
+                tempLength += COLONSPACE.length;
+                tempLength += contentDisposition.toHeader().getBytes().length;
+                tempLength += CRLF.length;
+                if (contentType != null) {
+                    tempLength += CONTENT_TYPE.length;
+                    tempLength += COLONSPACE.length;
+                    tempLength += contentType.toHeader().getBytes().length;
+                    tempLength += CRLF.length;
+                }
+                if (contentLength != -1) {
+                    tempLength += CONTENT_LENGTH.length;
+                    tempLength += COLONSPACE.length;
+                    tempLength += String.valueOf(contentLength).getBytes().length;
+                    tempLength += CRLF.length;
+                }
+                tempLength += CRLF.length;
+                tempLength += contentLength;
+                tempLength += CRLF.length;
             }
+            tempLength += DASHDASH.length;
+            tempLength += boundaryBytes.length;
+            tempLength += DASHDASH.length;
+            tempLength += CRLF.length;
+            length = tempLength;
             lengthSet = true;
         }
         return length;
@@ -88,7 +138,7 @@ public class MultipartTypedBody implements TypedData {
     public void writeTo(@NonNull OutputStream os) throws IOException {
         for (Pair<String, TypedData> part : parts) {
             os.write(DASHDASH);
-            os.write(boundary.getBytes());
+            os.write(boundaryBytes);
             os.write(CRLF);
             final ContentType contentDisposition = new ContentType("form-data").parameter("name", part.first);
             final ContentType contentType = part.second.contentType();
@@ -96,18 +146,18 @@ public class MultipartTypedBody implements TypedData {
             if (part.second instanceof FileTypedData) {
                 contentDisposition.addParameter("filename", ((FileTypedData) part.second).fileName());
             }
-            os.write("Content-Disposition".getBytes());
+            os.write(CONTENT_DISPOSITION);
             os.write(COLONSPACE);
             os.write(contentDisposition.toHeader().getBytes());
             os.write(CRLF);
             if (contentType != null) {
-                os.write("Content-Type".getBytes());
+                os.write(CONTENT_TYPE);
                 os.write(COLONSPACE);
                 os.write(contentType.toHeader().getBytes());
                 os.write(CRLF);
             }
             if (contentLength != -1) {
-                os.write("Content-Length".getBytes());
+                os.write(CONTENT_LENGTH);
                 os.write(COLONSPACE);
                 os.write(String.valueOf(contentLength).getBytes());
                 os.write(CRLF);
@@ -117,7 +167,7 @@ public class MultipartTypedBody implements TypedData {
             os.write(CRLF);
         }
         os.write(DASHDASH);
-        os.write(boundary.getBytes());
+        os.write(boundaryBytes);
         os.write(DASHDASH);
         os.write(CRLF);
     }
