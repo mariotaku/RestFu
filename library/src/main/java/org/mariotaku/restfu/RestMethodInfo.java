@@ -225,11 +225,12 @@ public final class RestMethodInfo {
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
         for (Pair<Form, Object> entry : forms) {
             final Form form = entry.first;
+            final String[] names = form.value();
             final Object value = entry.second;
             if (value == null) continue;
             if (value instanceof ValueMap) {
                 final ValueMap valueMap = (ValueMap) value;
-                for (String key : getValueMapKeys(form.value(), valueMap)) {
+                for (String key : getValueMapKeys(names, valueMap)) {
                     if (valueMap.has(key)) {
                         list.add(Pair.create(key, String.valueOf(valueMap.get(key))));
                     }
@@ -237,7 +238,7 @@ public final class RestMethodInfo {
             } else {
                 final char delimiter = form.arrayDelimiter();
                 String valueString = Utils.toString(value, delimiter);
-                for (String key : form.value()) {
+                for (String key : names) {
                     list.add(Pair.create(key, valueString));
                 }
             }
@@ -253,6 +254,16 @@ public final class RestMethodInfo {
             final Part part = entry.first;
             final String[] names = part.value();
             final Object value = entry.second;
+            if (value instanceof ValueMap) {
+                final ValueMap valueMap = (ValueMap) value;
+                for (String key : getValueMapKeys(names, valueMap)) {
+                    if (valueMap.has(key)) {
+                        addToParts(list, key, valueMap.get(key));
+                    }
+                }
+            } else {
+                addToParts(list, names[0], value);
+            }
             if (value instanceof TypedData) {
                 list.add(Pair.create(names[0], (TypedData) value));
             } else if (value != null) {
@@ -260,6 +271,14 @@ public final class RestMethodInfo {
             }
         }
         return partsCache = list;
+    }
+
+    private static void addToParts(List<Pair<String, TypedData>> list, String name, Object value) {
+        if (value instanceof TypedData) {
+            list.add(Pair.create(name, (TypedData) value));
+        } else if (value != null) {
+            list.add(Pair.create(name, BaseTypedData.wrap(value)));
+        }
     }
 
     @NonNull

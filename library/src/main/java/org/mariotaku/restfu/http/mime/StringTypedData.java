@@ -30,16 +30,23 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 /**
- * Created by mariotaku on 15/5/12.
+ * An immutable string body
  */
-public class StringTypedData implements TypedData {
+public final class StringTypedData implements TypedData {
 
     private final ContentType contentType;
     private final byte[] data;
     private ByteArrayInputStream is;
 
     public StringTypedData(@NonNull String string, @NonNull Charset charset) {
-        this.contentType = ContentType.parse("text/plain").charset(charset);
+        this(string, ContentType.parse("text/plain").charset(charset));
+    }
+
+    public StringTypedData(@NonNull String string, @NonNull final ContentType contentType) {
+        this.contentType = contentType;
+        final Charset charset = contentType.getCharset();
+        if (charset == null)
+            throw new NullPointerException("Charset must be specified in ContentType");
         try {
             this.data = string.getBytes(charset.name());
         } catch (UnsupportedEncodingException e) {

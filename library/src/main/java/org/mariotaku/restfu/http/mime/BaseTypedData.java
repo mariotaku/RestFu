@@ -99,6 +99,8 @@ public class BaseTypedData implements TypedData {
             return (TypedData) value;
         } else if (value instanceof java.io.File) {
             return new FileTypedData((java.io.File) value);
+        } else if (value instanceof String) {
+            return new StringTypedData((String) value, Charset.defaultCharset());
         }
         throw new UnsupportedOperationException();
     }
