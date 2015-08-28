@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 
 import org.mariotaku.restfu.http.ContentType;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +29,7 @@ import java.io.OutputStream;
 /**
  * Created by mariotaku on 15/2/6.
  */
-public interface TypedData {
+public interface TypedData extends Closeable {
     @Nullable
     ContentType contentType();
 
