@@ -50,6 +50,7 @@ android {
 
 dependencies {
     compile 'com.android.support:support-annotations:23.0.0'
+    compile 'com.squareup.okio:okio:1.6.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
 
