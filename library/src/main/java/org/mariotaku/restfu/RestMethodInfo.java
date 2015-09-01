@@ -264,11 +264,6 @@ public final class RestMethodInfo {
             } else {
                 addToParts(list, names[0], value);
             }
-            if (value instanceof TypedData) {
-                list.add(Pair.create(names[0], (TypedData) value));
-            } else if (value != null) {
-                list.add(Pair.create(names[0], BaseTypedData.wrap(value)));
-            }
         }
         return partsCache = list;
     }

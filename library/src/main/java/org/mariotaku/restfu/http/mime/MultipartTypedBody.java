@@ -46,6 +46,7 @@ public class MultipartTypedBody implements TypedData {
     private static final byte[] CRLF = {'\r', '\n'};
     private static final byte[] DASHDASH = {'-', '-'};
 
+    @NonNull
     private final List<Pair<String, TypedData>> parts;
     private final ContentType contentType;
     private final byte[] boundaryBytes;
@@ -53,7 +54,7 @@ public class MultipartTypedBody implements TypedData {
     private boolean lengthSet;
     private long length;
 
-    public MultipartTypedBody(List<Pair<String, TypedData>> parts) {
+    public MultipartTypedBody(@NonNull List<Pair<String, TypedData>> parts) {
         this.parts = parts;
         this.contentType = ContentType.parse("multipart/form-data");
         final String boundary = Utils.bytesToHex(UUID.randomUUID().toString().getBytes());
