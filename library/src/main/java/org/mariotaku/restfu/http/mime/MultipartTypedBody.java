@@ -167,8 +167,7 @@ public class MultipartTypedBody implements TypedData {
 
         @Override
         public void write(@NonNull final byte[] buffer, final int offset, final int count) throws IOException {
-            if (offset + count >= buffer.length || offset >= buffer.length)
-                throw new ArrayIndexOutOfBoundsException();
+            Utils.checkOffsetAndCount(buffer.length, offset, count);
             add(count);
         }
 
