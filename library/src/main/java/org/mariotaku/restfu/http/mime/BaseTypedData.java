@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 
+import okio.BufferedSink;
+import okio.Okio;
+
 /**
  * Created by mariotaku on 15/2/7.
  */
@@ -75,12 +78,11 @@ public class BaseTypedData implements TypedData {
     }
 
     @Override
-    public void writeTo(@NonNull OutputStream os) throws IOException {
-        final byte[] buffer = new byte[8192];
-        for (int len; (len = stream.read(buffer)) != -1; ) {
-            os.write(buffer, 0, len);
-        }
-
+    public long writeTo(@NonNull OutputStream os) throws IOException {
+        final BufferedSink sink = Okio.buffer(Okio.sink(os));
+        long result = sink.writeAll(Okio.source(stream));
+        sink.flush();
+        return result;
     }
 
     @NonNull

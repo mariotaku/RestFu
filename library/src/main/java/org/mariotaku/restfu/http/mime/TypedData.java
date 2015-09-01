@@ -37,7 +37,7 @@ public interface TypedData extends Closeable {
 
     long length() throws IOException;
 
-    void writeTo(@NonNull OutputStream os) throws IOException;
+    long writeTo(@NonNull OutputStream os) throws IOException;
 
     @NonNull
     InputStream stream() throws IOException;

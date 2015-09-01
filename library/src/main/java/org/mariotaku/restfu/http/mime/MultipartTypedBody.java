@@ -91,8 +91,8 @@ public class MultipartTypedBody implements TypedData {
     }
 
     @Override
-    public void writeTo(@NonNull OutputStream os) throws IOException {
-        writeBody(os);
+    public long writeTo(@NonNull OutputStream os) throws IOException {
+        return writeBody(os);
     }
 
     @NonNull
@@ -110,49 +110,57 @@ public class MultipartTypedBody implements TypedData {
         }
     }
 
-    private void writeBody(final @NonNull OutputStream os) throws IOException {
+    private long writeBody(final @NonNull OutputStream os) throws IOException {
+        long totalLength = 0;
         for (Pair<String, TypedData> part : parts) {
-            os.write(DASHDASH);
-            os.write(boundaryBytes);
-            os.write(CRLF);
+            totalLength += write(os, DASHDASH);
+            totalLength += write(os, boundaryBytes);
+            totalLength += write(os, CRLF);
             final ContentType contentDisposition = new ContentType("form-data").parameter("name", part.first);
             final ContentType contentType = part.second.contentType();
             final long contentLength = part.second.length();
             if (part.second instanceof FileTypedData) {
                 contentDisposition.addParameter("filename", ((FileTypedData) part.second).fileName());
             }
-            os.write(CONTENT_DISPOSITION);
-            os.write(COLONSPACE);
-            os.write(contentDisposition.toHeader().getBytes());
-            os.write(CRLF);
+            totalLength += write(os, CONTENT_DISPOSITION);
+            totalLength += write(os, COLONSPACE);
+            totalLength += write(os, contentDisposition.toHeader().getBytes());
+            totalLength += write(os, CRLF);
             if (contentType != null) {
-                os.write(CONTENT_TYPE);
-                os.write(COLONSPACE);
-                os.write(contentType.toHeader().getBytes());
-                os.write(CRLF);
+                totalLength += write(os, CONTENT_TYPE);
+                totalLength += write(os, COLONSPACE);
+                totalLength += write(os, contentType.toHeader().getBytes());
+                totalLength += write(os, CRLF);
             }
             if (contentLength != -1) {
-                os.write(CONTENT_LENGTH);
-                os.write(COLONSPACE);
-                os.write(String.valueOf(contentLength).getBytes());
-                os.write(CRLF);
+                totalLength += write(os, CONTENT_LENGTH);
+                totalLength += write(os, COLONSPACE);
+                totalLength += write(os, String.valueOf(contentLength).getBytes());
+                totalLength += write(os, CRLF);
             }
-            os.write(CRLF);
+            totalLength += write(os, CRLF);
             if (os instanceof LengthCountOutputStream) {
                 final LengthCountOutputStream lcos = (LengthCountOutputStream) os;
                 if (contentLength == -1) {
                     lcos.markNoLength();
                 }
                 lcos.add(contentLength);
+                totalLength += contentLength;
             } else {
-                part.second.writeTo(os);
+                totalLength += part.second.writeTo(os);
             }
-            os.write(CRLF);
+            totalLength += write(os, CRLF);
         }
-        os.write(DASHDASH);
-        os.write(boundaryBytes);
-        os.write(DASHDASH);
-        os.write(CRLF);
+        totalLength += write(os, DASHDASH);
+        totalLength += write(os, boundaryBytes);
+        totalLength += write(os, DASHDASH);
+        totalLength += write(os, CRLF);
+        return totalLength;
+    }
+
+    private long write(final OutputStream os, final byte[] bytes) throws IOException {
+        os.write(bytes);
+        return bytes.length;
     }
 
 

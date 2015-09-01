@@ -64,10 +64,11 @@ public class FileTypedData implements TypedData {
     }
 
     @Override
-    public void writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(@NonNull OutputStream os) throws IOException {
         final BufferedSink sink = Okio.buffer(Okio.sink(os));
-        sink.writeAll(Okio.source(stream()));
+        long result = sink.writeAll(Okio.source(stream()));
         sink.flush();
+        return result;
     }
 
     @NonNull

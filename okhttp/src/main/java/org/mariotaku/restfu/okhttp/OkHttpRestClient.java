@@ -212,10 +212,11 @@ public class OkHttpRestClient implements RestHttpClient {
         }
 
         @Override
-        public void writeTo(@NonNull OutputStream os) throws IOException {
+        public long writeTo(@NonNull OutputStream os) throws IOException {
             final BufferedSink sink = Okio.buffer(Okio.sink(os));
-            sink.writeAll(body.source());
+            final long result = sink.writeAll(body.source());
             sink.flush();
+            return result;
         }
 
         @NonNull

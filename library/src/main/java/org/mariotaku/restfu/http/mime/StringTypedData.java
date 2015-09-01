@@ -71,8 +71,9 @@ public final class StringTypedData implements TypedData {
     }
 
     @Override
-    public void writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(@NonNull OutputStream os) throws IOException {
         os.write(data);
+        return data.length;
     }
 
     @NonNull

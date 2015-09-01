@@ -81,9 +81,10 @@ public class FormTypedBody implements TypedData {
     }
 
     @Override
-    public void writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(@NonNull OutputStream os) throws IOException {
         toRawBytes();
         os.write(bytes);
+        return bytes.length;
     }
 
     @NonNull
