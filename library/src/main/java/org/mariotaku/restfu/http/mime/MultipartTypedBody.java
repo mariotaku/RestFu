@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,27 +36,18 @@ import java.util.UUID;
  */
 public class MultipartTypedBody implements TypedData {
 
-    public static final byte[] CONTENT_DISPOSITION;
-    public static final byte[] CONTENT_TYPE;
-    public static final byte[] CONTENT_LENGTH;
-
-    static {
-        try {
-            CONTENT_DISPOSITION = "Content-Disposition".getBytes("ASCII");
-            CONTENT_TYPE = "Content-Type".getBytes("ASCII");
-            CONTENT_LENGTH = "Content-Length".getBytes("ASCII");
-        } catch (UnsupportedEncodingException e) {
-            throw new AssertionError();
-        }
-    }
-
-    private final List<Pair<String, TypedData>> parts;
-    private final ContentType contentType;
-
-
+    private static final byte[] CONTENT_DISPOSITION = {'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'D',
+            'i', 's', 'p', 'o', 's', 'i', 't', 'i', 'o', 'n'};
+    private static final byte[] CONTENT_TYPE = {'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T',
+            'y', 'p', 'e'};
+    private static final byte[] CONTENT_LENGTH = {'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L',
+            'e', 'n', 'g', 't', 'h'};
     private static final byte[] COLONSPACE = {':', ' '};
     private static final byte[] CRLF = {'\r', '\n'};
     private static final byte[] DASHDASH = {'-', '-'};
+
+    private final List<Pair<String, TypedData>> parts;
+    private final ContentType contentType;
     private final byte[] boundaryBytes;
 
     private boolean lengthSet;
@@ -92,43 +82,9 @@ public class MultipartTypedBody implements TypedData {
     @Override
     public long length() throws IOException {
         if (!lengthSet) {
-            long tempLength = 0;
-            for (Pair<String, TypedData> part : parts) {
-                tempLength += DASHDASH.length;
-                tempLength += boundaryBytes.length;
-                tempLength += CRLF.length;
-                final ContentType contentDisposition = new ContentType("form-data").parameter("name", part.first);
-                final ContentType contentType = part.second.contentType();
-                final long contentLength = part.second.length();
-                if (contentLength < 0) return -1;
-                if (part.second instanceof FileTypedData) {
-                    contentDisposition.addParameter("filename", ((FileTypedData) part.second).fileName());
-                }
-                tempLength += CONTENT_DISPOSITION.length;
-                tempLength += COLONSPACE.length;
-                tempLength += contentDisposition.toHeader().getBytes().length;
-                tempLength += CRLF.length;
-                if (contentType != null) {
-                    tempLength += CONTENT_TYPE.length;
-                    tempLength += COLONSPACE.length;
-                    tempLength += contentType.toHeader().getBytes().length;
-                    tempLength += CRLF.length;
-                }
-                if (contentLength != -1) {
-                    tempLength += CONTENT_LENGTH.length;
-                    tempLength += COLONSPACE.length;
-                    tempLength += String.valueOf(contentLength).getBytes().length;
-                    tempLength += CRLF.length;
-                }
-                tempLength += CRLF.length;
-                tempLength += contentLength;
-                tempLength += CRLF.length;
-            }
-            tempLength += DASHDASH.length;
-            tempLength += boundaryBytes.length;
-            tempLength += DASHDASH.length;
-            tempLength += CRLF.length;
-            length = tempLength;
+            final LengthCountOutputStream os = new LengthCountOutputStream();
+            writeBody(os);
+            length = os.length();
             lengthSet = true;
         }
         return length;
@@ -136,6 +92,25 @@ public class MultipartTypedBody implements TypedData {
 
     @Override
     public void writeTo(@NonNull OutputStream os) throws IOException {
+        writeBody(os);
+    }
+
+    @NonNull
+    @Override
+    public InputStream stream() throws IOException {
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        writeTo(os);
+        return new ByteArrayInputStream(os.toByteArray());
+    }
+
+    @Override
+    public void close() throws IOException {
+        for (Pair<String, TypedData> part : parts) {
+            part.second.close();
+        }
+    }
+
+    private void writeBody(final @NonNull OutputStream os) throws IOException {
         for (Pair<String, TypedData> part : parts) {
             os.write(DASHDASH);
             os.write(boundaryBytes);
@@ -163,7 +138,15 @@ public class MultipartTypedBody implements TypedData {
                 os.write(CRLF);
             }
             os.write(CRLF);
-            part.second.writeTo(os);
+            if (os instanceof LengthCountOutputStream) {
+                final LengthCountOutputStream lcos = (LengthCountOutputStream) os;
+                if (contentLength == -1) {
+                    lcos.markNoLength();
+                }
+                lcos.add(contentLength);
+            } else {
+                part.second.writeTo(os);
+            }
             os.write(CRLF);
         }
         os.write(DASHDASH);
@@ -172,18 +155,44 @@ public class MultipartTypedBody implements TypedData {
         os.write(CRLF);
     }
 
-    @NonNull
-    @Override
-    public InputStream stream() throws IOException {
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        writeTo(os);
-        return new ByteArrayInputStream(os.toByteArray());
-    }
 
-    @Override
-    public void close() throws IOException {
-        for (Pair<String, TypedData> part : parts) {
-            part.second.close();
+    private static class LengthCountOutputStream extends OutputStream {
+
+        private boolean noLength;
+        private long length;
+
+        LengthCountOutputStream() {
+            reset();
+        }
+
+        @Override
+        public void write(@NonNull final byte[] buffer, final int offset, final int count) throws IOException {
+            if (offset + count >= buffer.length || offset >= buffer.length)
+                throw new ArrayIndexOutOfBoundsException();
+            add(count);
+        }
+
+        @Override
+        public void write(final int oneByte) throws IOException {
+            add(1);
+        }
+
+        public void add(long added) {
+            length += added;
+        }
+
+        public void markNoLength() {
+            noLength = true;
+        }
+
+        public void reset() {
+            length = 0;
+            noLength = false;
+        }
+
+        public long length() {
+            if (noLength) return -1;
+            return length;
         }
     }
 }
