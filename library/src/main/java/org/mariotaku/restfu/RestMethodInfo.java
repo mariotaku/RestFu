@@ -345,7 +345,9 @@ public final class RestMethodInfo {
                 for (String key : getValueMapKeys(entry.first.value(), valueMap)) {
                     if (valueMap.has(key)) {
                         final Object mapValue = valueMap.get(key);
-                        if (mapValue.getClass().isArray()) {
+                        if (mapValue == null) {
+                            list.add(Pair.<String, String>create(key, null));
+                        } else if (mapValue.getClass().isArray()) {
                             for (int i = 0, j = Array.getLength(mapValue); i < j; i++) {
                                 list.add(Pair.create(key, String.valueOf(Array.get(mapValue, i))));
                             }

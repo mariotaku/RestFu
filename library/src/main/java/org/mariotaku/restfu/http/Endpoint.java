@@ -16,6 +16,7 @@
 
 package org.mariotaku.restfu.http;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import org.mariotaku.restfu.RestRequestInfo;
@@ -76,8 +77,10 @@ public class Endpoint {
             final Pair<String, String> item = queries.get(i);
             urlBuilder.append(i != 0 ? '&' : '?');
             urlBuilder.append(Utils.encode(item.first, "UTF-8"));
-            urlBuilder.append('=');
-            urlBuilder.append(Utils.encode(item.second, "UTF-8"));
+            if (!TextUtils.isEmpty(item.second)) {
+                urlBuilder.append('=');
+                urlBuilder.append(Utils.encode(item.second, "UTF-8"));
+            }
         }
         return urlBuilder.toString();
     }
