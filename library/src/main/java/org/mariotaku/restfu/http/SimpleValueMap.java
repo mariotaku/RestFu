@@ -57,4 +57,8 @@ public class SimpleValueMap implements ValueMap {
         }
     }
 
+    public final HashMap<String, Object> asMap() {
+        return new HashMap<>(internalMap);
+    }
+
 }
