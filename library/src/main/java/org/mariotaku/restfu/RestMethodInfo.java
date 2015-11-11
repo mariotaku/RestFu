@@ -16,19 +16,8 @@
 
 package org.mariotaku.restfu;
 
-import android.support.annotation.NonNull;
-import android.util.Pair;
-
 import org.mariotaku.restfu.annotation.RestMethod;
-import org.mariotaku.restfu.annotation.param.Body;
-import org.mariotaku.restfu.annotation.param.Extra;
-import org.mariotaku.restfu.annotation.param.File;
-import org.mariotaku.restfu.annotation.param.Form;
-import org.mariotaku.restfu.annotation.param.Header;
-import org.mariotaku.restfu.annotation.param.MethodExtra;
-import org.mariotaku.restfu.annotation.param.Part;
-import org.mariotaku.restfu.annotation.param.Path;
-import org.mariotaku.restfu.annotation.param.Query;
+import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.exception.MethodNotImplementedException;
 import org.mariotaku.restfu.http.FileValue;
 import org.mariotaku.restfu.http.ValueMap;
@@ -196,7 +185,7 @@ public final class RestMethodInfo {
         return null;
     }
 
-    @NonNull
+
     public Map<String, Object> getExtras() {
         if (extrasCache != null) return extrasCache;
         final Map<String, Object> map = new HashMap<>();
@@ -219,7 +208,7 @@ public final class RestMethodInfo {
         return extrasCache = map;
     }
 
-    @NonNull
+
     public List<Pair<String, String>> getForms() {
         if (formsCache != null) return formsCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
@@ -246,7 +235,7 @@ public final class RestMethodInfo {
         return formsCache = list;
     }
 
-    @NonNull
+
     public List<Pair<String, TypedData>> getParts() {
         if (partsCache != null) return partsCache;
         final ArrayList<Pair<String, TypedData>> list = new ArrayList<>();
@@ -276,7 +265,7 @@ public final class RestMethodInfo {
         }
     }
 
-    @NonNull
+
     public List<Pair<String, String>> getHeaders() {
         if (headersCache != null) return headersCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
@@ -307,7 +296,7 @@ public final class RestMethodInfo {
         return methodExtra;
     }
 
-    @NonNull
+
     public String getPath() {
         final int queryIndex = path.indexOf('?');
         final StringBuilder sb = new StringBuilder();
@@ -330,7 +319,7 @@ public final class RestMethodInfo {
         return sb.toString();
     }
 
-    @NonNull
+
     public List<Pair<String, String>> getQueries() {
         if (queriesCache != null) return queriesCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();

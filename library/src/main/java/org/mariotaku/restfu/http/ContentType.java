@@ -17,8 +17,7 @@
 package org.mariotaku.restfu.http;
 
 
-import android.util.Pair;
-
+import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.Utils;
 
 import java.nio.charset.Charset;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Utility and model class for Content-Type
  * Created by mariotaku on 15/2/4.
  */
 public final class ContentType {

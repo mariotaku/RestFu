@@ -16,10 +16,6 @@
 
 package org.mariotaku.restfu;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Pair;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -121,8 +117,7 @@ public class Utils {
     }
 
 
-    @NonNull
-    public static <T> T assertNotNull(@Nullable T obj) {
+    public static <T> T assertNotNull(T obj) {
         if (obj == null) throw new NullPointerException();
         return obj;
     }
@@ -139,8 +134,8 @@ public class Utils {
         return new String(hexChars);
     }
 
-    @NonNull
-    public static String toString(@NonNull Object value, char delimiter) {
+
+    public static String toString(Object value, char delimiter) {
         final Class<?> valueClass = value.getClass();
         if (valueClass.isArray()) {
             final StringBuilder sb = new StringBuilder();
@@ -161,5 +156,9 @@ public class Utils {
             throw new ArrayIndexOutOfBoundsException("length=" + arrayLength + "; regionStart="
                     + offset + "; regionLength=" + count);
         }
+    }
+
+    public static boolean isEmpty(CharSequence text) {
+        return text == null || text.length() == 0;
     }
 }

@@ -16,12 +16,11 @@
 
 package org.mariotaku.restfu.callback;
 
-import android.support.annotation.NonNull;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
 public interface ErrorCallback {
 
-    void error(@NonNull Throwable t);
+    void error(Throwable t);
 }

@@ -16,17 +16,12 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-import android.util.Pair;
 
+import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.Utils;
 import org.mariotaku.restfu.http.ContentType;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -81,13 +76,12 @@ public class FormTypedBody implements TypedData {
     }
 
     @Override
-    public long writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(OutputStream os) throws IOException {
         toRawBytes();
         os.write(bytes);
         return bytes.length;
     }
 
-    @NonNull
     @Override
     public InputStream stream() {
         toRawBytes();

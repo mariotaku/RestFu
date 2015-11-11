@@ -16,8 +16,6 @@
 
 package org.mariotaku.restfu.http;
 
-import android.support.annotation.NonNull;
-
 import java.io.IOException;
 
 /**
@@ -25,7 +23,6 @@ import java.io.IOException;
  */
 public interface RestHttpClient {
 
-    @NonNull
     RestHttpResponse execute(RestHttpRequest request) throws IOException;
 
     RestQueuedRequest enqueue(RestHttpRequest request, RestHttpCallback callback);

@@ -16,18 +16,11 @@
 
 package org.mariotaku.restfu;
 
-import android.support.annotation.Nullable;
-
 import org.mariotaku.restfu.callback.ErrorCallback;
 import org.mariotaku.restfu.callback.RawCallback;
 import org.mariotaku.restfu.callback.RestCallback;
 import org.mariotaku.restfu.exception.RestException;
-import org.mariotaku.restfu.http.Authorization;
-import org.mariotaku.restfu.http.Endpoint;
-import org.mariotaku.restfu.http.RestHttpCallback;
-import org.mariotaku.restfu.http.RestHttpClient;
-import org.mariotaku.restfu.http.RestHttpRequest;
-import org.mariotaku.restfu.http.RestHttpResponse;
+import org.mariotaku.restfu.http.*;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -222,7 +215,7 @@ public class RestAPIFactory {
             }
         }
 
-        private void onError(@Nullable final IOException cause, final Object[] args,
+        private void onError(final IOException cause, final Object[] args,
                              final RestHttpRequest restHttpRequest, final Class<?>[] parameterTypes,
                              final RestHttpResponse response) throws Exception {
             final Exception re = exceptionFactory.newException(cause, restHttpRequest, response);
@@ -248,8 +241,8 @@ public class RestAPIFactory {
     public static final class DefaultExceptionFactory implements ExceptionFactory {
 
         @Override
-        public Exception newException(@Nullable Throwable cause, @Nullable final RestHttpRequest request,
-                                      @Nullable final RestHttpResponse response) {
+        public Exception newException(final Throwable cause, final RestHttpRequest request,
+                                      final RestHttpResponse response) {
             final RestException e = new RestException(cause);
             e.setRequest(request);
             e.setResponse(response);

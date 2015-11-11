@@ -16,11 +16,9 @@
 
 package org.mariotaku.restfu.http;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Pair;
 
 import org.mariotaku.restfu.HttpRequestFactory;
+import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.RestRequestInfo;
 import org.mariotaku.restfu.http.mime.TypedData;
 
@@ -120,7 +118,7 @@ public final class RestHttpRequest {
     public static final class DefaultFactory implements HttpRequestFactory {
 
         @Override
-        public RestHttpRequest create(@NonNull Endpoint endpoint, @NonNull RestRequestInfo requestInfo, @Nullable Authorization authorization) {
+        public RestHttpRequest create(Endpoint endpoint, RestRequestInfo requestInfo, Authorization authorization) {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
             final ArrayList<Pair<String, String>> headers = new ArrayList<>(requestInfo.getHeaders());
 

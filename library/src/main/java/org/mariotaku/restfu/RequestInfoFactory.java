@@ -17,14 +17,17 @@
 package org.mariotaku.restfu;
 
 /**
+ * <p>
  * Creates {@link RestRequestInfo} from {@link RestMethodInfo}
- * <p/>
+ * </p>
+ * <p>
  * Use this method if you want to modify requests <b>before</b> normal HTTP request created.
+ * </p>
  *
- * <br/>
- *
+ * <p>
  * When using OAuth authorization, this would be very useful, because normal HTTP request cannot
  * be modified once OAuth signature generated.
+ * </p>
  */
 public interface RequestInfoFactory {
     RestRequestInfo create(RestMethodInfo methodInfo);

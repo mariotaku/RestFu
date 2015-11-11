@@ -16,20 +16,13 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-
+import okio.BufferedSink;
+import okio.Okio;
 import org.mariotaku.restfu.http.ContentType;
 import org.mariotaku.restfu.io.StreamingGZIPInputStream;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
-
-import okio.BufferedSink;
-import okio.Okio;
 
 /**
  * Created by mariotaku on 15/2/7.
@@ -78,14 +71,14 @@ public class BaseTypedData implements TypedData {
     }
 
     @Override
-    public long writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(OutputStream os) throws IOException {
         final BufferedSink sink = Okio.buffer(Okio.sink(os));
         long result = sink.writeAll(Okio.source(stream));
         sink.flush();
         return result;
     }
 
-    @NonNull
+
     @Override
     public InputStream stream() {
         return stream;

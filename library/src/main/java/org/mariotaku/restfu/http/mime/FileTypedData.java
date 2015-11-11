@@ -16,18 +16,11 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-
-import org.mariotaku.restfu.http.ContentType;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import okio.BufferedSink;
 import okio.Okio;
+import org.mariotaku.restfu.http.ContentType;
+
+import java.io.*;
 
 /**
  * Created by mariotaku on 15/5/6.
@@ -64,14 +57,14 @@ public class FileTypedData implements TypedData {
     }
 
     @Override
-    public long writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(OutputStream os) throws IOException {
         final BufferedSink sink = Okio.buffer(Okio.sink(os));
         long result = sink.writeAll(Okio.source(stream()));
         sink.flush();
         return result;
     }
 
-    @NonNull
+
     @Override
     public InputStream stream() throws IOException {
         if (stream != null) return stream;

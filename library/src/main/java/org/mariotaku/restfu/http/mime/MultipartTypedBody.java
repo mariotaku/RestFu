@@ -16,17 +16,12 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-import android.util.Pair;
 
+import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.Utils;
 import org.mariotaku.restfu.http.ContentType;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -46,7 +41,6 @@ public class MultipartTypedBody implements TypedData {
     private static final byte[] CRLF = {'\r', '\n'};
     private static final byte[] DASHDASH = {'-', '-'};
 
-    @NonNull
     private final List<Pair<String, TypedData>> parts;
     private final ContentType contentType;
     private final byte[] boundaryBytes;
@@ -54,7 +48,7 @@ public class MultipartTypedBody implements TypedData {
     private boolean lengthSet;
     private long length;
 
-    public MultipartTypedBody(@NonNull List<Pair<String, TypedData>> parts) {
+    public MultipartTypedBody(List<Pair<String, TypedData>> parts) {
         this.parts = parts;
         this.contentType = ContentType.parse("multipart/form-data");
         final String boundary = Utils.bytesToHex(UUID.randomUUID().toString().getBytes());
@@ -66,7 +60,7 @@ public class MultipartTypedBody implements TypedData {
         this(new ArrayList<Pair<String, TypedData>>());
     }
 
-    public void add(@NonNull String name, @NonNull TypedData data) {
+    public void add(final String name, final TypedData data) {
         parts.add(Pair.create(name, data));
     }
 
@@ -92,11 +86,10 @@ public class MultipartTypedBody implements TypedData {
     }
 
     @Override
-    public long writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(OutputStream os) throws IOException {
         return writeBody(os);
     }
 
-    @NonNull
     @Override
     public InputStream stream() throws IOException {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -111,7 +104,7 @@ public class MultipartTypedBody implements TypedData {
         }
     }
 
-    private long writeBody(final @NonNull OutputStream os) throws IOException {
+    private long writeBody(final OutputStream os) throws IOException {
         long totalLength = 0;
         for (Pair<String, TypedData> part : parts) {
             totalLength += write(os, DASHDASH);
@@ -175,7 +168,7 @@ public class MultipartTypedBody implements TypedData {
         }
 
         @Override
-        public void write(@NonNull final byte[] buffer, final int offset, final int count) throws IOException {
+        public void write(final byte[] buffer, final int offset, final int count) throws IOException {
             Utils.checkOffsetAndCount(buffer.length, offset, count);
             add(count);
         }

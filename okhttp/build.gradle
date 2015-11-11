@@ -14,28 +14,21 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.library'
+apply plugin: 'java'
 
-android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.0"
-
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
+repositories {
+    mavenCentral()
 }
+
+configurations { providedCompile }
+
+sourceSets.main.compileClasspath += configurations.providedCompile
+sourceSets.test.compileClasspath += configurations.providedCompile
+sourceSets.test.runtimeClasspath += configurations.providedCompile
 
 dependencies {
     compile project(':library')
     compile 'com.squareup.okhttp:okhttp:2.5.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    providedCompile 'com.google.android:android:4.1.1.4'
 }

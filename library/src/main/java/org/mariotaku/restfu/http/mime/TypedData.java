@@ -16,8 +16,6 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import org.mariotaku.restfu.http.ContentType;
 
@@ -30,16 +28,14 @@ import java.io.OutputStream;
  * Created by mariotaku on 15/2/6.
  */
 public interface TypedData extends Closeable {
-    @Nullable
     ContentType contentType();
 
     String contentEncoding();
 
     long length() throws IOException;
 
-    long writeTo(@NonNull OutputStream os) throws IOException;
+    long writeTo(final OutputStream os) throws IOException;
 
-    @NonNull
     InputStream stream() throws IOException;
 
     void close() throws IOException;

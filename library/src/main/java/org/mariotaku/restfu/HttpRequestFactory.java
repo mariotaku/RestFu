@@ -16,9 +16,6 @@
 
 package org.mariotaku.restfu;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import org.mariotaku.restfu.http.Authorization;
 import org.mariotaku.restfu.http.Endpoint;
 import org.mariotaku.restfu.http.RestHttpRequest;
@@ -27,5 +24,5 @@ import org.mariotaku.restfu.http.RestHttpRequest;
  * Created by mariotaku on 15/5/25.
  */
 public interface HttpRequestFactory {
-    RestHttpRequest create(@NonNull Endpoint endpoint, @NonNull RestRequestInfo info, @Nullable Authorization authorization);
+    RestHttpRequest create(Endpoint endpoint, RestRequestInfo info, Authorization authorization);
 }

@@ -16,28 +16,12 @@
 
 package org.mariotaku.restfu.okhttp;
 
-import android.content.Context;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Pair;
-
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
-
-import org.mariotaku.restfu.http.ContentType;
-import org.mariotaku.restfu.http.RestHttpCallback;
-import org.mariotaku.restfu.http.RestHttpClient;
-import org.mariotaku.restfu.http.RestHttpRequest;
-import org.mariotaku.restfu.http.RestHttpResponse;
-import org.mariotaku.restfu.http.RestQueuedRequest;
+import com.squareup.okhttp.*;
+import okio.BufferedSink;
+import okio.Okio;
+import org.mariotaku.restfu.Pair;
+import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.TypedData;
 
 import java.io.IOException;
@@ -46,9 +30,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import okio.BufferedSink;
-import okio.Okio;
-
 /**
  * Created by mariotaku on 15/5/5.
  */
@@ -56,11 +37,10 @@ public class OkHttpRestClient implements RestHttpClient {
 
     private final OkHttpClient client;
 
-    public OkHttpRestClient(Context context, OkHttpClient client) {
+    public OkHttpRestClient(OkHttpClient client) {
         this.client = client;
     }
 
-    @NonNull
     @Override
     public RestHttpResponse execute(RestHttpRequest restHttpRequest) throws IOException {
         final Call call = newCall(restHttpRequest);
@@ -103,7 +83,7 @@ public class OkHttpRestClient implements RestHttpClient {
                 callback.callback(new OkRestHttpResponse(response));
             }
         });
-        return new OkHttpQueuedRequest(client, call);
+        return OkHttpQueuedRequest.create(client, call);
     }
 
     private static class RestToOkBody extends RequestBody {
@@ -130,8 +110,7 @@ public class OkHttpRestClient implements RestHttpClient {
             return body.length();
         }
 
-        @Nullable
-        public static RequestBody wrap(@Nullable TypedData body) {
+        public static RequestBody wrap(TypedData body) {
             if (body == null) return null;
             return new RestToOkBody(body);
         }
@@ -212,14 +191,13 @@ public class OkHttpRestClient implements RestHttpClient {
         }
 
         @Override
-        public long writeTo(@NonNull OutputStream os) throws IOException {
+        public long writeTo(OutputStream os) throws IOException {
             final BufferedSink sink = Okio.buffer(Okio.sink(os));
             final long result = sink.writeAll(body.source());
             sink.flush();
             return result;
         }
 
-        @NonNull
         @Override
         public InputStream stream() throws IOException {
             return body.byteStream();
@@ -231,10 +209,10 @@ public class OkHttpRestClient implements RestHttpClient {
         }
     }
 
-    private static class OkHttpQueuedRequest implements RestQueuedRequest {
-        private final OkHttpClient client;
-        private final Call call;
-        private boolean cancelled;
+    static abstract class OkHttpQueuedRequest implements RestQueuedRequest {
+        final OkHttpClient client;
+        final Call call;
+        boolean cancelled;
 
         public OkHttpQueuedRequest(final OkHttpClient client, final Call call) {
             this.client = client;
@@ -249,15 +227,49 @@ public class OkHttpRestClient implements RestHttpClient {
         @Override
         public void cancel() {
             cancelled = true;
-            if (Looper.myLooper() != Looper.getMainLooper()) {
+            cancelImpl();
+        }
+
+        protected abstract void cancelImpl();
+
+        private static class Android extends OkHttpQueuedRequest {
+
+            public Android(OkHttpClient client, Call call) {
+                super(client, call);
+            }
+
+            @Override
+            protected void cancelImpl() {
+                if (Looper.myLooper() != Looper.getMainLooper()) {
+                    call.cancel();
+                } else {
+                    client.getDispatcher().getExecutorService().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            call.cancel();
+                        }
+                    });
+                }
+            }
+        }
+
+        public static RestQueuedRequest create(OkHttpClient client, Call call) {
+            try {
+                Class.forName("android.os.Build");
+                return new Android(client, call);
+            } catch (Exception e) {
+                return new Base(client, call);
+            }
+        }
+
+        private static class Base extends OkHttpQueuedRequest {
+            public Base(OkHttpClient client, Call call) {
+                super(client, call);
+            }
+
+            @Override
+            protected void cancelImpl() {
                 call.cancel();
-            } else {
-                client.getDispatcher().getExecutorService().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        call.cancel();
-                    }
-                });
             }
         }
     }

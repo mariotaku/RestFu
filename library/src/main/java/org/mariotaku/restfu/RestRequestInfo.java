@@ -16,8 +16,6 @@
 
 package org.mariotaku.restfu;
 
-import android.support.annotation.Nullable;
-import android.util.Pair;
 
 import org.mariotaku.restfu.http.FileValue;
 import org.mariotaku.restfu.http.mime.FormTypedBody;
@@ -75,7 +73,6 @@ public final class RestRequestInfo {
         return extras;
     }
 
-    @Nullable
     public TypedData getBody() {
         if (bodyCache != null) return bodyCache;
         if (body == null) return null;

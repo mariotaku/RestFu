@@ -16,8 +16,8 @@
 
 package org.mariotaku.restfu.http;
 
-import android.util.Pair;
 
+import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.http.mime.TypedData;
 
 import java.io.Closeable;

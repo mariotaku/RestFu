@@ -16,17 +16,10 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import org.mariotaku.restfu.Utils;
 import org.mariotaku.restfu.http.ContentType;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.Charset;
 
 /**
@@ -38,11 +31,11 @@ public final class StringTypedData implements TypedData {
     private final byte[] data;
     private ByteArrayInputStream is;
 
-    public StringTypedData(@NonNull String string, @NonNull Charset charset) {
+    public StringTypedData(String string, Charset charset) {
         this(string, ContentType.parse("text/plain").charset(charset));
     }
 
-    public StringTypedData(@NonNull String string, @NonNull final ContentType contentType) {
+    public StringTypedData(String string, final ContentType contentType) {
         this.contentType = contentType;
         final Charset charset = contentType.getCharset();
         if (charset == null)
@@ -54,7 +47,7 @@ public final class StringTypedData implements TypedData {
         }
     }
 
-    @Nullable
+
     @Override
     public ContentType contentType() {
         return contentType;
@@ -71,12 +64,12 @@ public final class StringTypedData implements TypedData {
     }
 
     @Override
-    public long writeTo(@NonNull OutputStream os) throws IOException {
+    public long writeTo(OutputStream os) throws IOException {
         os.write(data);
         return data.length;
     }
 
-    @NonNull
+
     @Override
     public InputStream stream() throws IOException {
         if (is != null) return is;
