@@ -52,6 +52,10 @@ public class Endpoint {
         return constructUrl(url, path, Arrays.asList(queries));
     }
 
+    public boolean checkEndpoint(String that) {
+        return that != null && that.startsWith(url);
+    }
+
     public static String constructUrl(String endpoint, String path, List<Pair<String, String>> queries) {
         if (endpoint == null) throw new NullPointerException("Endpoint is null");
         final StringBuilder urlBuilder = new StringBuilder();
@@ -88,4 +92,5 @@ public class Endpoint {
     public static String constructUrl(String url, Pair<String, String>... queries) {
         return constructUrl(url, Arrays.asList(queries));
     }
+
 }
