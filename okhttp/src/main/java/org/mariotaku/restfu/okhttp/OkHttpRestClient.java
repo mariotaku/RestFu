@@ -86,11 +86,20 @@ public class OkHttpRestClient implements RestHttpClient {
         return OkHttpQueuedRequest.create(client, call);
     }
 
+    public OkHttpClient getClient() {
+        return client;
+    }
+
     private static class RestToOkBody extends RequestBody {
         private final TypedData body;
 
         public RestToOkBody(TypedData body) {
             this.body = body;
+        }
+
+        public static RequestBody wrap(TypedData body) {
+            if (body == null) return null;
+            return new RestToOkBody(body);
         }
 
         @Override
@@ -108,11 +117,6 @@ public class OkHttpRestClient implements RestHttpClient {
         @Override
         public long contentLength() throws IOException {
             return body.length();
-        }
-
-        public static RequestBody wrap(TypedData body) {
-            if (body == null) return null;
-            return new RestToOkBody(body);
         }
     }
 
@@ -219,6 +223,15 @@ public class OkHttpRestClient implements RestHttpClient {
             this.call = call;
         }
 
+        public static RestQueuedRequest create(OkHttpClient client, Call call) {
+            try {
+                Class.forName("android.os.Build");
+                return new Android(client, call);
+            } catch (Exception e) {
+                return new Base(client, call);
+            }
+        }
+
         @Override
         public boolean isCancelled() {
             return cancelled || call.isCanceled();
@@ -250,15 +263,6 @@ public class OkHttpRestClient implements RestHttpClient {
                         }
                     });
                 }
-            }
-        }
-
-        public static RestQueuedRequest create(OkHttpClient client, Call call) {
-            try {
-                Class.forName("android.os.Build");
-                return new Android(client, call);
-            } catch (Exception e) {
-                return new Base(client, call);
             }
         }
 
