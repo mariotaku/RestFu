@@ -28,7 +28,7 @@ sourceSets.test.runtimeClasspath += configurations.providedCompile
 
 dependencies {
     compile project(':library')
-    compile 'com.squareup.okhttp:okhttp:2.5.0'
+    compile 'com.squareup.okhttp:okhttp:2.6.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     providedCompile 'com.google.android:android:4.1.1.4'
 }
