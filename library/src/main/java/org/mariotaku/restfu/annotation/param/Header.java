@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Header {
-    String[] value();
+    String[] value() default {};
+
     char arrayDelimiter() default ',';
 }

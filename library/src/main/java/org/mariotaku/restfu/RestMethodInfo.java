@@ -20,6 +20,7 @@ import org.mariotaku.restfu.annotation.RestMethod;
 import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.exception.MethodNotImplementedException;
 import org.mariotaku.restfu.http.FileValue;
+import org.mariotaku.restfu.http.HeaderValue;
 import org.mariotaku.restfu.http.ValueMap;
 import org.mariotaku.restfu.http.mime.BaseTypedData;
 import org.mariotaku.restfu.http.mime.TypedData;
@@ -136,56 +137,6 @@ public final class RestMethodInfo {
                 file, extras, methodExtra);
     }
 
-    private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
-        return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
-    }
-
-    private static void checkMethod(RestMethod restMethod, Body body, ArrayList<Pair<Form, Object>> forms,
-                                    ArrayList<Pair<Part, Object>> parts, FileValue file) {
-        if (restMethod == null)
-            throw new MethodNotImplementedException("Method must has annotation annotated with @RestMethod");
-        if (restMethod.hasBody() && body == null && (!forms.isEmpty() || !parts.isEmpty() || file != null)) {
-            throw new IllegalArgumentException("@Body required for method " + restMethod.value());
-        } else if (!restMethod.hasBody() && body != null) {
-            throw new IllegalArgumentException(restMethod.value() + " does not allow body");
-        }
-        if (body == null) return;
-        switch (body.value()) {
-            case FILE: {
-                if (file == null) {
-                    throw new NullPointerException("@File annotation is required");
-                }
-                if (!forms.isEmpty() || !parts.isEmpty()) {
-                    throw new IllegalArgumentException("Only arguments with @File annotation allowed");
-                }
-                break;
-            }
-            case MULTIPART: {
-                if (!forms.isEmpty() || file != null) {
-                    throw new IllegalArgumentException("Only arguments with @Part annotation allowed");
-                }
-                break;
-            }
-            case FORM: {
-                if (file != null || !parts.isEmpty()) {
-                    throw new IllegalArgumentException("Only arguments with @Form annotation allowed");
-                }
-                break;
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
-        for (Annotation annotation : annotations) {
-            if (annotationClass.isAssignableFrom(annotation.annotationType())) {
-                return (T) annotation;
-            }
-        }
-        return null;
-    }
-
-
     public Map<String, Object> getExtras() {
         if (extrasCache != null) return extrasCache;
         final Map<String, Object> map = new HashMap<>();
@@ -207,7 +158,6 @@ public final class RestMethodInfo {
         }
         return extrasCache = map;
     }
-
 
     public List<Pair<String, String>> getForms() {
         if (formsCache != null) return formsCache;
@@ -235,7 +185,6 @@ public final class RestMethodInfo {
         return formsCache = list;
     }
 
-
     public List<Pair<String, TypedData>> getParts() {
         if (partsCache != null) return partsCache;
         final ArrayList<Pair<String, TypedData>> list = new ArrayList<>();
@@ -257,15 +206,6 @@ public final class RestMethodInfo {
         return partsCache = list;
     }
 
-    private static void addToParts(List<Pair<String, TypedData>> list, String name, Object value) {
-        if (value instanceof TypedData) {
-            list.add(Pair.create(name, (TypedData) value));
-        } else if (value != null) {
-            list.add(Pair.create(name, BaseTypedData.wrap(value)));
-        }
-    }
-
-
     public List<Pair<String, String>> getHeaders() {
         if (headersCache != null) return headersCache;
         final ArrayList<Pair<String, String>> list = new ArrayList<>();
@@ -276,12 +216,12 @@ public final class RestMethodInfo {
                 final ValueMap valueMap = (ValueMap) value;
                 for (String key : getValueMapKeys(header.value(), valueMap)) {
                     if (valueMap.has(key)) {
-                        list.add(Pair.create(key, String.valueOf(valueMap.get(key))));
+                        list.add(Pair.create(key, toHeader(valueMap.get(key))));
                     }
                 }
             } else if (value != null) {
                 for (String key : header.value()) {
-                    list.add(Pair.create(key, String.valueOf(value)));
+                    list.add(Pair.create(key, toHeader(value)));
                 }
             }
         }
@@ -356,6 +296,19 @@ public final class RestMethodInfo {
         return queriesCache = list;
     }
 
+    public RestRequestInfo toRequestInfo() {
+        return new RestRequestInfo(getMethod().value(), getPath(), getQueries(), getForms(),
+                getHeaders(), getParts(), getFile(), getBody(), getExtras());
+    }
+
+    public Body getBody() {
+        return body;
+    }
+
+    public FileValue getFile() {
+        return file;
+    }
+
     private String findPathReplacement(String key) {
         for (Pair<Path, Object> entry : paths) {
             if (key.equals(entry.first.value())) {
@@ -369,16 +322,66 @@ public final class RestMethodInfo {
         return null;
     }
 
-    public RestRequestInfo toRequestInfo() {
-        return new RestRequestInfo(getMethod().value(), getPath(), getQueries(), getForms(),
-                getHeaders(), getParts(), getFile(), getBody(), getExtras());
+    private String toHeader(Object value) {
+        if (value instanceof HeaderValue) return ((HeaderValue) value).toHeaderValue();
+        return String.valueOf(value);
     }
 
-    public Body getBody() {
-        return body;
+    private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
+        return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
     }
 
-    public FileValue getFile() {
-        return file;
+    private static void checkMethod(RestMethod restMethod, Body body, ArrayList<Pair<Form, Object>> forms,
+                                    ArrayList<Pair<Part, Object>> parts, FileValue file) {
+        if (restMethod == null)
+            throw new MethodNotImplementedException("Method must has annotation annotated with @RestMethod");
+        if (restMethod.hasBody() && body == null && (!forms.isEmpty() || !parts.isEmpty() || file != null)) {
+            throw new IllegalArgumentException("@Body required for method " + restMethod.value());
+        } else if (!restMethod.hasBody() && body != null) {
+            throw new IllegalArgumentException(restMethod.value() + " does not allow body");
+        }
+        if (body == null) return;
+        switch (body.value()) {
+            case FILE: {
+                if (file == null) {
+                    throw new NullPointerException("@File annotation is required");
+                }
+                if (!forms.isEmpty() || !parts.isEmpty()) {
+                    throw new IllegalArgumentException("Only arguments with @File annotation allowed");
+                }
+                break;
+            }
+            case MULTIPART: {
+                if (!forms.isEmpty() || file != null) {
+                    throw new IllegalArgumentException("Only arguments with @Part annotation allowed");
+                }
+                break;
+            }
+            case FORM: {
+                if (file != null || !parts.isEmpty()) {
+                    throw new IllegalArgumentException("Only arguments with @Form annotation allowed");
+                }
+                break;
+            }
+        }
     }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
+        for (Annotation annotation : annotations) {
+            if (annotationClass.isAssignableFrom(annotation.annotationType())) {
+                return (T) annotation;
+            }
+        }
+        return null;
+    }
+
+    private static void addToParts(List<Pair<String, TypedData>> list, String name, Object value) {
+        if (value instanceof TypedData) {
+            list.add(Pair.create(name, (TypedData) value));
+        } else if (value != null) {
+            list.add(Pair.create(name, BaseTypedData.wrap(value)));
+        }
+    }
+
 }

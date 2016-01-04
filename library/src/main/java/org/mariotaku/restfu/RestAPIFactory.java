@@ -132,6 +132,9 @@ public class RestAPIFactory {
         @SuppressWarnings({"TryWithIdenticalCatches"})
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Exception {
+            if (method.getDeclaringClass() == Object.class) {
+                return method.invoke(proxy, args);
+            }
             final RestMethodInfo methodInfo = RestMethodInfo.get(method, args);
             final RestRequestInfo requestInfo;
             if (requestInfoFactory != null) {
