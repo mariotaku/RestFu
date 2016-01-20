@@ -37,11 +37,11 @@ public class SimpleValueMap implements ValueMap {
         return internalMap.get(key);
     }
 
-    protected void put(String key, Object value) {
+    public void put(String key, Object value) {
         internalMap.put(key, value);
     }
 
-    protected void remove(String key) {
+    public void remove(String key) {
         internalMap.remove(key);
     }
 

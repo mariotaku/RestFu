@@ -16,16 +16,16 @@
 
 package org.mariotaku.restfu.exception;
 
-import org.mariotaku.restfu.http.RestHttpRequest;
-import org.mariotaku.restfu.http.RestHttpResponse;
+import org.mariotaku.restfu.http.HttpRequest;
+import org.mariotaku.restfu.http.HttpResponse;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
 public class RestException extends RuntimeException {
 
-    private RestHttpRequest request;
-    private RestHttpResponse response;
+    private HttpRequest request;
+    private HttpResponse response;
 
     public RestException(String message, Throwable cause) {
         super(message, cause);
@@ -49,19 +49,19 @@ public class RestException extends RuntimeException {
                 "} " + super.toString();
     }
 
-    public RestHttpRequest getRequest() {
+    public HttpRequest getRequest() {
         return request;
     }
 
-    public void setRequest(final RestHttpRequest request) {
+    public void setRequest(final HttpRequest request) {
         this.request = request;
     }
 
-    public RestHttpResponse getResponse() {
+    public HttpResponse getResponse() {
         return response;
     }
 
-    public void setResponse(RestHttpResponse response) {
+    public void setResponse(HttpResponse response) {
         this.response = response;
     }
 

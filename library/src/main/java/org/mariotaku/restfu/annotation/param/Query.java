@@ -28,5 +28,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Query {
     String[] value() default {};
-    char arrayDelimiter() default ',';
+
+    char arrayDelimiter() default '\0';
 }

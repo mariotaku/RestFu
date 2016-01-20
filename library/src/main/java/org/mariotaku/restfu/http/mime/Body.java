@@ -14,15 +14,30 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.http;
+package org.mariotaku.restfu.http.mime;
 
-import org.mariotaku.restfu.RestRequest;
+
+import org.mariotaku.restfu.http.ContentType;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
- * Created by mariotaku on 15/2/4.
+ * Created by mariotaku on 15/2/6.
  */
-public interface Authorization {
-    String getHeader(Endpoint endpoint, RestRequest info);
+public interface Body extends Closeable {
+    ContentType contentType();
 
-    boolean hasAuthorization();
+    String contentEncoding();
+
+    long length() throws IOException;
+
+    long writeTo(final OutputStream os) throws IOException;
+
+    InputStream stream() throws IOException;
+
+    void close() throws IOException;
+
 }

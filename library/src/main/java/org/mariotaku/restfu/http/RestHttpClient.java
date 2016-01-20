@@ -16,15 +16,13 @@
 
 package org.mariotaku.restfu.http;
 
-import java.io.IOException;
-
 /**
  * Created by mariotaku on 15/2/7.
  */
 public interface RestHttpClient {
 
-    RestHttpResponse execute(RestHttpRequest request) throws IOException;
+    HttpCall newCall(HttpRequest request);
 
-    RestQueuedRequest enqueue(RestHttpRequest request, RestHttpCallback callback);
+    void enqueue(HttpCall call, HttpCallback callback);
 
 }

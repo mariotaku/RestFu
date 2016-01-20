@@ -17,16 +17,12 @@
 package org.mariotaku.restfu;
 
 import org.mariotaku.restfu.callback.ErrorCallback;
-import org.mariotaku.restfu.callback.RawCallback;
 import org.mariotaku.restfu.callback.RestCallback;
 import org.mariotaku.restfu.exception.RestException;
 import org.mariotaku.restfu.http.*;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 
 /**
  * Created by mariotaku on 15/2/6.
@@ -35,11 +31,27 @@ public class RestAPIFactory {
 
     private Endpoint endpoint;
     private Authorization authorization;
-    private Converter converter;
-    private RestHttpClient restClient;
-    private HttpRequestFactory httpRequestFactory;
+    private RestHttpClient httpClient;
+
+    private RestConverter.Factory restConverterFactory;
+    private HttpRequest.Factory httpRequestFactory;
     private ExceptionFactory exceptionFactory;
-    private RequestInfoFactory requestInfoFactory;
+    private RestRequest.Factory restRequestFactory;
+    private ValueMap constantPool;
+
+    public RestAPIFactory() {
+
+    }
+
+    public static RestClient getRestClient(Object obj) {
+        final InvocationHandler handler = Proxy.getInvocationHandler(obj);
+        if (!(handler instanceof RestClient)) throw new IllegalArgumentException();
+        return (RestClient) handler;
+    }
+
+    public void setConstantPool(ValueMap constantPool) {
+        this.constantPool = constantPool;
+    }
 
     public void setEndpoint(Endpoint endpoint) {
         this.endpoint = endpoint;
@@ -49,15 +61,15 @@ public class RestAPIFactory {
         this.authorization = authorization;
     }
 
-    public void setConverter(Converter converter) {
-        this.converter = converter;
+    public void setRestConverterFactory(RestConverter.Factory restConverterFactory) {
+        this.restConverterFactory = restConverterFactory;
     }
 
-    public void setClient(RestHttpClient restClient) {
-        this.restClient = restClient;
+    public void setHttpClient(RestHttpClient restClient) {
+        this.httpClient = restClient;
     }
 
-    public void setHttpRequestFactory(HttpRequestFactory factory) {
+    public void setHttpRequestFactory(HttpRequest.Factory factory) {
         this.httpRequestFactory = factory;
     }
 
@@ -65,35 +77,51 @@ public class RestAPIFactory {
         this.exceptionFactory = factory;
     }
 
-    public RestAPIFactory() {
-
-    }
-
     @SuppressWarnings("unchecked")
     public <T> T build(Class<T> cls) {
         final ClassLoader classLoader = cls.getClassLoader();
         final Class[] interfaces = new Class[]{cls};
         return (T) Proxy.newProxyInstance(classLoader, interfaces, new RestInvocationHandler(endpoint,
-                authorization, restClient, converter, requestInfoFactory, httpRequestFactory, exceptionFactory));
+                authorization, httpClient, restConverterFactory, restRequestFactory, httpRequestFactory,
+                exceptionFactory, constantPool));
     }
 
-    public static RestClient getRestClient(Object obj) {
-        final InvocationHandler handler = Proxy.getInvocationHandler(obj);
-        if (!(handler instanceof RestClient)) throw new IllegalArgumentException();
-        return (RestClient) handler;
-    }
-
-    public void setRequestInfoFactory(RequestInfoFactory requestInfoFactory) {
-        this.requestInfoFactory = requestInfoFactory;
+    public void setRestRequestFactory(RestRequest.Factory restRequestFactory) {
+        this.restRequestFactory = restRequestFactory;
     }
 
     private static class RestInvocationHandler implements InvocationHandler, RestClient {
         private final Endpoint endpoint;
         private final Authorization authorization;
-        private final Converter converter;
-        private final HttpRequestFactory requestFactory;
+
+        private final RestConverter.Factory responseConverterFactory;
+        private final HttpRequest.Factory requestFactory;
         private final ExceptionFactory exceptionFactory;
-        private final RequestInfoFactory requestInfoFactory;
+        private final RestRequest.Factory requestInfoFactory;
+        private final ValueMap constantPoll;
+        private final RestHttpClient restClient;
+
+        public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
+                                     RestHttpClient restClient,
+                                     RestConverter.Factory restConverterFactory,
+                                     RestRequest.Factory restRequestFactory,
+                                     HttpRequest.Factory httpRequestFactory,
+                                     ExceptionFactory exceptionFactory,
+                                     ValueMap constantPoll) {
+            this.endpoint = endpoint;
+            this.authorization = authorization;
+            this.restClient = restClient;
+            this.responseConverterFactory = restConverterFactory;
+            this.requestInfoFactory = restRequestFactory != null ? restRequestFactory : new RestRequest.DefaultFactory();
+            this.requestFactory = httpRequestFactory != null ? httpRequestFactory : new HttpRequest.DefaultFactory();
+            this.exceptionFactory = exceptionFactory != null ? exceptionFactory : new DefaultExceptionFactory();
+            this.constantPoll = constantPoll;
+        }
+
+        private static <T> void invokeCallback(final RestCallback<?> callback, final T result) {
+            //noinspection unchecked
+            ((RestCallback<T>) callback).result(result);
+        }
 
         @Override
         public Endpoint getEndpoint() {
@@ -106,27 +134,8 @@ public class RestAPIFactory {
         }
 
         @Override
-        public Converter getConverter() {
-            return converter;
-        }
-
-        @Override
         public Authorization getAuthorization() {
             return authorization;
-        }
-
-        private final RestHttpClient restClient;
-
-        public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
-                                     RestHttpClient restClient, Converter converter,
-                                     RequestInfoFactory requestInfoFactory, HttpRequestFactory requestFactory, ExceptionFactory exceptionFactory) {
-            this.endpoint = endpoint;
-            this.authorization = authorization;
-            this.restClient = restClient;
-            this.converter = converter;
-            this.requestInfoFactory = requestInfoFactory;
-            this.requestFactory = requestFactory != null ? requestFactory : new RestHttpRequest.DefaultFactory();
-            this.exceptionFactory = exceptionFactory != null ? exceptionFactory : new DefaultExceptionFactory();
         }
 
         @SuppressWarnings({"TryWithIdenticalCatches"})
@@ -134,78 +143,26 @@ public class RestAPIFactory {
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Exception {
             if (method.getDeclaringClass() == Object.class) {
                 return method.invoke(proxy, args);
+            } else if (method.getDeclaringClass() == RestClient.class) {
+                return method.invoke(this, args);
             }
-            final RestMethodInfo methodInfo = RestMethodInfo.get(method, args);
-            final RestRequestInfo requestInfo;
-            if (requestInfoFactory != null) {
-                requestInfo = requestInfoFactory.create(methodInfo);
-            } else {
-                requestInfo = methodInfo.toRequestInfo();
-            }
-            final RestHttpRequest restHttpRequest = requestFactory.create(endpoint, requestInfo, authorization);
+            final RestMethod restMethod = RestMethod.get(method, args);
+            final RestRequest restRequest = requestInfoFactory.create(restMethod, responseConverterFactory, constantPoll);
+            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization);
             final Class<?>[] parameterTypes = method.getParameterTypes();
-            RestHttpResponse response = null;
+            HttpCall httpCall = null;
+            HttpResponse httpResponse = null;
             try {
-                response = restClient.execute(restHttpRequest);
-                if (parameterTypes.length > 0) {
-                    final Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
-                    if (RestCallback.class.isAssignableFrom(lastParameterType)) {
-                        final RestCallback<?> callback = (RestCallback<?>) args[args.length - 1];
-                        restClient.enqueue(restHttpRequest, new RestHttpCallback() {
-                            @Override
-                            public void callback(final RestHttpResponse response) {
-                                if (callback != null) {
-                                    try {
-                                        invokeCallback(callback, converter.convert(response, method.getGenericReturnType()));
-                                    } catch (Exception e) {
-                                        callback.error(e);
-                                    }
-                                }
-                            }
-
-                            @Override
-                            public void exception(final IOException ioe) {
-                                callback.error(ioe);
-                            }
-
-                            @Override
-                            public void cancelled() {
-
-                            }
-                        });
-                        return null;
-                    } else if (RawCallback.class.isAssignableFrom(lastParameterType)) {
-                        final RawCallback callback = (RawCallback) args[args.length - 1];
-                        restClient.enqueue(restHttpRequest, new RestHttpCallback() {
-                            @Override
-                            public void callback(final RestHttpResponse response) {
-                                try {
-                                    callback.result(response);
-                                } catch (IOException e) {
-                                    callback.error(e);
-                                }
-                            }
-
-                            @Override
-                            public void exception(final IOException ioe) {
-                                callback.error(ioe);
-                            }
-
-                            @Override
-                            public void cancelled() {
-
-                            }
-                        });
-                        return null;
-                    }
-                }
-                if (!response.isSuccessful()) {
-                    onError(null, args, restHttpRequest, parameterTypes, response);
+                httpCall = restClient.newCall(httpRequest);
+                httpResponse = httpCall.execute();
+                if (!httpResponse.isSuccessful()) {
+                    onError(null, args, httpRequest, parameterTypes, httpResponse);
                     return null;
                 }
-                return converter.convert(response, method.getGenericReturnType());
+                final Type returnType = method.getGenericReturnType();
+                return responseConverterFactory.fromResponse(returnType).convert(httpResponse);
             } catch (IOException e) {
-                onError(e, args, restHttpRequest, parameterTypes, response);
+                onError(e, args, httpRequest, parameterTypes, httpResponse);
                 return null;
             } catch (InvocationTargetException e) {
                 throw new RuntimeException(e);
@@ -214,14 +171,15 @@ public class RestAPIFactory {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } finally {
-                Utils.closeSilently(response);
+                Utils.closeSilently(httpResponse);
+                Utils.closeSilently(httpCall);
             }
         }
 
         private void onError(final IOException cause, final Object[] args,
-                             final RestHttpRequest restHttpRequest, final Class<?>[] parameterTypes,
-                             final RestHttpResponse response) throws Exception {
-            final Exception re = exceptionFactory.newException(cause, restHttpRequest, response);
+                             final HttpRequest httpRequest, final Class<?>[] parameterTypes,
+                             final HttpResponse response) throws Exception {
+            final Exception re = exceptionFactory.newException(cause, httpRequest, response);
             if (parameterTypes.length > 0) {
                 final Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
                 if (ErrorCallback.class.isAssignableFrom(lastParameterType)) {
@@ -234,18 +192,13 @@ public class RestAPIFactory {
             }
             throw re;
         }
-
-        private static <T> void invokeCallback(final RestCallback<?> callback, final T result) {
-            //noinspection unchecked
-            ((RestCallback<T>) callback).result(result);
-        }
     }
 
     public static final class DefaultExceptionFactory implements ExceptionFactory {
 
         @Override
-        public Exception newException(final Throwable cause, final RestHttpRequest request,
-                                      final RestHttpResponse response) {
+        public Exception newException(final Throwable cause, final HttpRequest request,
+                                      final HttpResponse response) {
             final RestException e = new RestException(cause);
             e.setRequest(request);
             e.setResponse(response);

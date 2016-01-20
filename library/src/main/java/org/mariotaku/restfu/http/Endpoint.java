@@ -17,12 +17,10 @@
 package org.mariotaku.restfu.http;
 
 
-import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.RestRequestInfo;
+import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.Utils;
 
-import java.util.Arrays;
-import java.util.List;
+import java.nio.charset.Charset;
 
 /**
  * Created by mariotaku on 15/2/6.
@@ -39,24 +37,28 @@ public class Endpoint {
         this.url = url;
     }
 
-    public static String constructUrl(String endpoint, RestRequestInfo requestInfo) {
-        return constructUrl(endpoint, requestInfo.getPath(), requestInfo.getQueries());
+    public static String constructUrl(String endpoint, RestRequest restRequest) {
+        return constructUrl(endpoint, restRequest.getPath(), restRequest.getQueries());
     }
 
-    public String construct(String path, List<Pair<String, String>> queries) {
+    public String construct(String path, MultiValueMap<String> queries) {
         return constructUrl(url, path, queries);
     }
 
-    @SafeVarargs
-    public final String construct(String path, Pair<String, String>... queries) {
-        return constructUrl(url, path, Arrays.asList(queries));
+    public String construct(String path, String[]... queries) {
+        MultiValueMap<String> map = new MultiValueMap<>();
+        for (String[] query : queries) {
+            if (query.length != 2) throw new IllegalArgumentException();
+            map.add(query[0], query[1]);
+        }
+        return constructUrl(url, path, map);
     }
 
     public boolean checkEndpoint(String that) {
         return that != null && that.startsWith(url);
     }
 
-    public static String constructUrl(String endpoint, String path, List<Pair<String, String>> queries) {
+    public static String constructUrl(String endpoint, String path, MultiValueMap<String> queries) {
         if (endpoint == null) throw new NullPointerException("Endpoint is null");
         final StringBuilder urlBuilder = new StringBuilder();
         if (endpoint.charAt(endpoint.length() - 1) == '/') {
@@ -73,24 +75,21 @@ public class Endpoint {
         return constructUrl(urlBuilder.toString(), queries);
     }
 
-    public static String constructUrl(String url, List<Pair<String, String>> queries) {
-        if (queries == null || queries.isEmpty()) return url;
-        final StringBuilder urlBuilder = new StringBuilder(url);
-        for (int i = 0, j = queries.size(); i < j; i++) {
-            final Pair<String, String> item = queries.get(i);
-            urlBuilder.append(i != 0 ? '&' : '?');
-            urlBuilder.append(Utils.encode(item.first, "UTF-8"));
-            if (!Utils.isEmpty(item.second)) {
-                urlBuilder.append('=');
-                urlBuilder.append(Utils.encode(item.second, "UTF-8"));
-            }
+    public static String constructUrl(String url, String[]... queries) {
+        MultiValueMap<String> map = new MultiValueMap<>();
+        for (String[] query : queries) {
+            if (query.length != 2) throw new IllegalArgumentException();
+            map.add(query[0], query[1]);
         }
-        return urlBuilder.toString();
+        return constructUrl(url, map);
     }
 
-    @SafeVarargs
-    public static String constructUrl(String url, Pair<String, String>... queries) {
-        return constructUrl(url, Arrays.asList(queries));
+    public static String constructUrl(String url, MultiValueMap<String> queries) {
+        if (queries == null || queries.isEmpty()) return url;
+        final StringBuilder urlBuilder = new StringBuilder(url);
+        urlBuilder.append('?');
+        Utils.append(urlBuilder, queries, Charset.forName("UTF-8"));
+        return urlBuilder.toString();
     }
 
 }

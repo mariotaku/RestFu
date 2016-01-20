@@ -16,18 +16,16 @@
 
 package org.mariotaku.restfu.okhttp;
 
-import android.os.Looper;
 import com.squareup.okhttp.*;
 import okio.BufferedSink;
 import okio.Okio;
 import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.http.*;
-import org.mariotaku.restfu.http.mime.TypedData;
+import org.mariotaku.restfu.http.mime.Body;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,48 +40,22 @@ public class OkHttpRestClient implements RestHttpClient {
     }
 
     @Override
-    public RestHttpResponse execute(RestHttpRequest restHttpRequest) throws IOException {
-        final Call call = newCall(restHttpRequest);
-        return new OkRestHttpResponse(call.execute());
-    }
-
-    private Call newCall(final RestHttpRequest restHttpRequest) {
+    public HttpCall newCall(final HttpRequest httpRequest) {
         final Request.Builder builder = new Request.Builder();
-        builder.method(restHttpRequest.getMethod(), RestToOkBody.wrap(restHttpRequest.getBody()));
-        builder.url(restHttpRequest.getUrl());
-        final List<Pair<String, String>> headers = restHttpRequest.getHeaders();
+        builder.method(httpRequest.getMethod(), RestToOkBody.wrap(httpRequest.getBody()));
+        builder.url(httpRequest.getUrl());
+        final MultiValueMap<String> headers = httpRequest.getHeaders();
         if (headers != null) {
-            for (Pair<String, String> header : headers) {
+            for (Pair<String, String> header : headers.toList()) {
                 builder.addHeader(header.first, header.second);
             }
         }
-        builder.tag(restHttpRequest.getExtra());
-        return client.newCall(builder.build());
+        return new OkToRestCall(client.newCall(builder.build()));
     }
 
     @Override
-    public RestQueuedRequest enqueue(final RestHttpRequest request, final RestHttpCallback callback) {
-        final Call call = newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(final Request request, final IOException e) {
-                if (call.isCanceled()) {
-                    callback.cancelled();
-                    return;
-                }
-                callback.exception(e);
-            }
-
-            @Override
-            public void onResponse(final Response response) throws IOException {
-                if (call.isCanceled()) {
-                    callback.cancelled();
-                    return;
-                }
-                callback.callback(new OkRestHttpResponse(response));
-            }
-        });
-        return OkHttpQueuedRequest.create(client, call);
+    public void enqueue(final HttpCall call, final HttpCallback callback) {
+        call.enqueue(callback);
     }
 
     public OkHttpClient getClient() {
@@ -91,13 +63,13 @@ public class OkHttpRestClient implements RestHttpClient {
     }
 
     private static class RestToOkBody extends RequestBody {
-        private final TypedData body;
+        private final Body body;
 
-        public RestToOkBody(TypedData body) {
+        public RestToOkBody(Body body) {
             this.body = body;
         }
 
-        public static RequestBody wrap(TypedData body) {
+        public static RequestBody wrap(Body body) {
             if (body == null) return null;
             return new RestToOkBody(body);
         }
@@ -120,11 +92,11 @@ public class OkHttpRestClient implements RestHttpClient {
         }
     }
 
-    private static class OkRestHttpResponse extends RestHttpResponse {
+    private static class OkResponse extends HttpResponse {
         private final Response response;
-        private TypedData body;
+        private Body body;
 
-        public OkRestHttpResponse(Response response) {
+        public OkResponse(Response response) {
             this.response = response;
         }
 
@@ -134,13 +106,9 @@ public class OkHttpRestClient implements RestHttpClient {
         }
 
         @Override
-        public List<Pair<String, String>> getHeaders() {
+        public MultiValueMap<String> getHeaders() {
             final Headers headers = response.headers();
-            final ArrayList<Pair<String, String>> headersList = new ArrayList<>();
-            for (int i = 0, j = headers.size(); i < j; i++) {
-                headersList.add(Pair.create(headers.name(i), headers.value(i)));
-            }
-            return headersList;
+            return new MultiValueMap<>(headers.toMultimap(), true);
         }
 
         @Override
@@ -149,15 +117,14 @@ public class OkHttpRestClient implements RestHttpClient {
         }
 
         @Override
-        public String[] getHeaders(String name) {
-            final List<String> values = response.headers(name);
-            return values.toArray(new String[values.size()]);
+        public List<String> getHeaders(String name) {
+            return response.headers(name);
         }
 
         @Override
-        public TypedData getBody() {
+        public Body getBody() {
             if (body != null) return body;
-            return body = new OkToRestBody(response.body());
+            return body = new OkResponseBody(response.body());
         }
 
         @Override
@@ -169,11 +136,11 @@ public class OkHttpRestClient implements RestHttpClient {
         }
     }
 
-    private static class OkToRestBody implements TypedData {
+    private static class OkResponseBody implements Body {
 
         private final ResponseBody body;
 
-        public OkToRestBody(ResponseBody body) {
+        public OkResponseBody(ResponseBody body) {
             this.body = body;
         }
 
@@ -213,68 +180,52 @@ public class OkHttpRestClient implements RestHttpClient {
         }
     }
 
-    static abstract class OkHttpQueuedRequest implements RestQueuedRequest {
-        final OkHttpClient client;
-        final Call call;
-        boolean cancelled;
+    private static class OkToRestCall implements HttpCall {
+        private final Call call;
 
-        public OkHttpQueuedRequest(final OkHttpClient client, final Call call) {
-            this.client = client;
+        public OkToRestCall(Call call) {
             this.call = call;
         }
 
-        public static RestQueuedRequest create(OkHttpClient client, Call call) {
-            try {
-                Class.forName("android.os.Build");
-                return new Android(client, call);
-            } catch (Exception e) {
-                return new Base(client, call);
-            }
+        @Override
+        public HttpResponse execute() throws IOException {
+            return new OkResponse(call.execute());
         }
 
         @Override
-        public boolean isCancelled() {
-            return cancelled || call.isCanceled();
+        public void enqueue(HttpCallback callback) {
+            call.enqueue(new OkCallback(callback));
         }
 
-        @Override
         public void cancel() {
-            cancelled = true;
-            cancelImpl();
+            call.cancel();
         }
 
-        protected abstract void cancelImpl();
-
-        private static class Android extends OkHttpQueuedRequest {
-
-            public Android(OkHttpClient client, Call call) {
-                super(client, call);
-            }
-
-            @Override
-            protected void cancelImpl() {
-                if (Looper.myLooper() != Looper.getMainLooper()) {
-                    call.cancel();
-                } else {
-                    client.getDispatcher().getExecutorService().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            call.cancel();
-                        }
-                    });
-                }
-            }
+        @Override
+        public boolean isCanceled() {
+            return call.isCanceled();
         }
 
-        private static class Base extends OkHttpQueuedRequest {
-            public Base(OkHttpClient client, Call call) {
-                super(client, call);
-            }
+        @Override
+        public void close() throws IOException {
+        }
+    }
 
-            @Override
-            protected void cancelImpl() {
-                call.cancel();
-            }
+    private static class OkCallback implements Callback {
+        private final HttpCallback callback;
+
+        public OkCallback(HttpCallback callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void onFailure(Request request, IOException e) {
+            this.callback.failure(e);
+        }
+
+        @Override
+        public void onResponse(Response response) throws IOException {
+            this.callback.response(new OkResponse(response));
         }
     }
 }

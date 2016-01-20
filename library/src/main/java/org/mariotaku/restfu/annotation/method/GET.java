@@ -16,7 +16,7 @@
 
 package org.mariotaku.restfu.annotation.method;
 
-import org.mariotaku.restfu.annotation.RestMethod;
+import org.mariotaku.restfu.annotation.HttpMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RestMethod(value = "GET", hasBody = false)
+@HttpMethod(value = GET.METHOD, hasBody = false)
 public @interface GET {
     String METHOD = "GET";
 

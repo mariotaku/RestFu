@@ -16,9 +16,18 @@
 
 package org.mariotaku.restfu.http;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * Created by mariotaku on 15/2/6.
  */
-public enum BodyType {
-    FORM, MULTIPART, FILE
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface BodyType {
+    String value();
+
+    String FORM = "form", MULTIPART = "multipart", RAW = "raw";
 }

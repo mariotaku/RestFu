@@ -29,5 +29,5 @@ import java.lang.annotation.Target;
 public @interface Header {
     String[] value() default {};
 
-    char arrayDelimiter() default ',';
+    char arrayDelimiter() default '\0';
 }

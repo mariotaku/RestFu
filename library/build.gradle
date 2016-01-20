@@ -21,7 +21,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.squareup.okio:okio:1.6.0'
-    compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }

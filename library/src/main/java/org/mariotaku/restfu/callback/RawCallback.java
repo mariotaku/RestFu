@@ -16,7 +16,7 @@
 
 package org.mariotaku.restfu.callback;
 
-import org.mariotaku.restfu.http.RestHttpResponse;
+import org.mariotaku.restfu.http.HttpResponse;
 
 import java.io.IOException;
 
@@ -24,6 +24,6 @@ import java.io.IOException;
  * Created by mariotaku on 15/2/7.
  */
 public interface RawCallback extends ErrorCallback {
-    void result(RestHttpResponse result) throws IOException;
+    void result(HttpResponse result) throws IOException;
 
 }

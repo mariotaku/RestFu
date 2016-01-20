@@ -16,13 +16,16 @@
 
 package org.mariotaku.restfu.http;
 
-import org.mariotaku.restfu.RestRequest;
+import java.io.IOException;
 
 /**
- * Created by mariotaku on 15/2/4.
+ * Created by mariotaku on 15/6/8.
  */
-public interface Authorization {
-    String getHeader(Endpoint endpoint, RestRequest info);
+public interface HttpCallback {
 
-    boolean hasAuthorization();
+    void response(HttpResponse response);
+
+    void failure(IOException ioe);
+
+    void cancelled();
 }

@@ -16,14 +16,14 @@
 
 package org.mariotaku.restfu;
 
-import org.mariotaku.restfu.http.RestHttpRequest;
-import org.mariotaku.restfu.http.RestHttpResponse;
+import org.mariotaku.restfu.http.HttpRequest;
+import org.mariotaku.restfu.http.HttpResponse;
 
 /**
  * Created by mariotaku on 15/5/25.
  */
 public interface ExceptionFactory {
 
-    Exception newException(final Throwable cause, final RestHttpRequest request, final RestHttpResponse response);
+    Exception newException(final Throwable cause, final HttpRequest request, final HttpResponse response);
 
 }

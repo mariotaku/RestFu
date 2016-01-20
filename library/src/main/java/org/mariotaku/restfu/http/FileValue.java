@@ -16,8 +16,8 @@
 
 package org.mariotaku.restfu.http;
 
-import org.mariotaku.restfu.http.mime.BaseTypedData;
-import org.mariotaku.restfu.http.mime.TypedData;
+import org.mariotaku.restfu.http.mime.BaseBody;
+import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.annotation.param.File;
 
 /**
@@ -40,7 +40,7 @@ public final class FileValue {
         this.value = value;
     }
 
-    public TypedData body() {
-        return BaseTypedData.wrap(value);
+    public Body body() {
+        return BaseBody.wrap(value);
     }
 }

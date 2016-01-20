@@ -16,12 +16,15 @@
 
 package org.mariotaku.restfu;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import org.mariotaku.restfu.http.MultiValueMap;
+import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.StringBody;
+
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +32,8 @@ import java.util.List;
  * Created by mariotaku on 15/2/4.
  */
 public class Utils {
+    private static final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
     public static String[] split(final String str, final String separator) {
         String[] returnValue;
         int index = str.indexOf(separator);
@@ -97,18 +102,16 @@ public class Utils {
         return buf.toString();
     }
 
-
-    public static void parseGetParameters(final String queryString, final List<Pair<String, String>> params,
-                                          final String encoding) {
+    public static void parseQuery(final String queryString, final String encoding, final KeyValueConsumer consumer) {
         final String[] queryStrings = split(queryString, "&");
         try {
             for (final String query : queryStrings) {
                 final String[] split = split(query, "=");
                 final String key = URLDecoder.decode(split[0], encoding);
                 if (split.length == 2) {
-                    params.add(Pair.create(key, URLDecoder.decode(split[1], encoding)));
+                    consumer.consume(key, URLDecoder.decode(split[1], encoding));
                 } else {
-                    params.add(Pair.create(key, ""));
+                    consumer.consume(key, null);
                 }
             }
         } catch (final UnsupportedEncodingException e) {
@@ -116,13 +119,20 @@ public class Utils {
         }
     }
 
+    public static void parseQuery(final String queryString, final String encoding, final MultiValueMap<String> params) {
+        parseQuery(queryString, encoding, new KeyValueConsumer() {
+
+            @Override
+            public void consume(String key, String value) {
+                params.add(key, value);
+            }
+        });
+    }
 
     public static <T> T assertNotNull(T obj) {
         if (obj == null) throw new NullPointerException();
         return obj;
     }
-
-    private static final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
@@ -151,6 +161,46 @@ public class Utils {
         }
     }
 
+    public static Body[] toBodies(Object value, RestConverter.Factory factory, char delimiter)
+            throws RestConverter.ConvertException, IOException {
+        if (value == null) throw new NullPointerException();
+        final Class<?> valueClass = value.getClass();
+        if (valueClass.isArray()) {
+            if (delimiter != '\0') {
+                // If delimiter specified, all array elements should be treated as string
+                final StringBuilder sb = new StringBuilder();
+                for (int i = 0, j = Array.getLength(value); i < j; i++) {
+                    if (i != 0) {
+                        sb.append(delimiter);
+                    }
+                    sb.append(Array.get(value, i));
+                }
+                return new Body[]{new StringBody(sb.toString(), Charset.forName("UTF-8"))};
+            } else {
+                final int length = Array.getLength(value);
+                final Body[] bodies = new Body[length];
+                for (int i = 0; i < length; i++) {
+                    bodies[i] = toBody(Array.get(value, i), factory);
+                }
+                return bodies;
+            }
+        } else {
+            return new Body[]{toBody(value, factory)};
+        }
+    }
+
+
+    public static Body toBody(Object obj, RestConverter.Factory factory) throws RestConverter.ConvertException, IOException {
+        if (obj == null)
+            return null;
+        final Class<?> cls = obj.getClass();
+        //noinspection unchecked
+        final RestConverter<Object, Body> converter = (RestConverter<Object, Body>)
+                factory.toParam(cls);
+        if (converter == null) throw new RestConverter.UnsupportedTypeException(cls);
+        return converter.convert(obj);
+    }
+
     public static void checkOffsetAndCount(int arrayLength, int offset, int count) {
         if ((offset | count) < 0 || offset > arrayLength || arrayLength - offset < count) {
             throw new ArrayIndexOutOfBoundsException("length=" + arrayLength + "; regionStart="
@@ -160,5 +210,34 @@ public class Utils {
 
     public static boolean isEmpty(CharSequence text) {
         return text == null || text.length() == 0;
+    }
+
+
+    public static long copyStream(InputStream is, OutputStream os) throws IOException {
+        byte[] buf = new byte[8192];
+        int len;
+        long total = 0;
+        while ((len = is.read(buf)) != -1) {
+            os.write(buf, 0, len);
+            total += len;
+        }
+        return total;
+    }
+
+    public static void append(StringBuilder sb, MultiValueMap<String> queries, Charset charset) {
+        final List<Pair<String, String>> list = queries.toList();
+        for (int i = 0, j = list.size(); i < j; i++) {
+            if (i != 0) {
+                sb.append('&');
+            }
+            final Pair<String, String> form = list.get(i);
+            sb.append(encode(form.first, charset.name()));
+            sb.append('=');
+            sb.append(encode(form.second, charset.name()));
+        }
+    }
+
+    public interface KeyValueConsumer {
+        void consume(String key, String value);
     }
 }
