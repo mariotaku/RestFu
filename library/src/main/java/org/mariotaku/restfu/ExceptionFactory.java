@@ -22,8 +22,8 @@ import org.mariotaku.restfu.http.HttpResponse;
 /**
  * Created by mariotaku on 15/5/25.
  */
-public interface ExceptionFactory {
+public interface ExceptionFactory<E extends Exception> {
 
-    Exception newException(final Throwable cause, final HttpRequest request, final HttpResponse response);
+    E newException(final Throwable cause, final HttpRequest request, final HttpResponse response);
 
 }

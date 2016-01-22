@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class RestMethod {
+public final class RestMethod<E extends Exception> {
 
     private final HttpMethod method;
     private final String path;
@@ -46,7 +46,7 @@ public final class RestMethod {
     private final Queries queryConstants;
     private final Params paramConstants;
 
-    private final FileValue file;
+    private final RawValue rawValue;
 
 
     private MultiValueMap<String> headersCache;
@@ -57,7 +57,7 @@ public final class RestMethod {
     public RestMethod(HttpMethod method, String path, BodyType bodyType, ArrayList<Pair<Path, Object>> paths,
                       ArrayList<Pair<Header, Object>> headers, ArrayList<Pair<Query, Object>> queries,
                       ArrayList<Pair<Param, Object>> params, ArrayList<Pair<Extra, Object>> extras,
-                      Headers headerConstants, Queries queryConstants, Params paramConstants, FileValue file) {
+                      Headers headerConstants, Queries queryConstants, Params paramConstants, RawValue rawValue) {
         this.method = method;
         this.path = path;
         this.bodyType = bodyType;
@@ -69,10 +69,10 @@ public final class RestMethod {
         this.headerConstants = headerConstants;
         this.queryConstants = queryConstants;
         this.paramConstants = paramConstants;
-        this.file = file;
+        this.rawValue = rawValue;
     }
 
-    static RestMethod get(Method method, Object[] args) {
+    static <E extends Exception> RestMethod<E> get(Method method, Object[] args) {
         HttpMethod httpMethod = null;
         String pathFormat = null;
         for (Annotation annotation : method.getAnnotations()) {
@@ -93,7 +93,7 @@ public final class RestMethod {
         final ArrayList<Pair<Header, Object>> headers = new ArrayList<>();
         final ArrayList<Pair<Param, Object>> params = new ArrayList<>();
         final ArrayList<Pair<Extra, Object>> extras = new ArrayList<>();
-        FileValue file = null;
+        RawValue rawValue = null;
         final Annotation[][] annotations = method.getParameterAnnotations();
         for (int i = 0, j = annotations.length; i < j; i++) {
             final Path path = getAnnotation(annotations[i], Path.class);
@@ -112,10 +112,10 @@ public final class RestMethod {
             if (param != null) {
                 params.add(Pair.create(param, args[i]));
             }
-            final File paramFile = getAnnotation(annotations[i], File.class);
-            if (paramFile != null) {
-                if (file == null) {
-                    file = new FileValue(paramFile, args[i]);
+            final Raw paramRaw = getAnnotation(annotations[i], Raw.class);
+            if (paramRaw != null) {
+                if (rawValue == null) {
+                    rawValue = new RawValue(paramRaw, args[i]);
                 } else {
                     throw new IllegalArgumentException();
                 }
@@ -128,9 +128,9 @@ public final class RestMethod {
         final Headers headerConstants = getAnnotation(method, Headers.class);
         final Queries queryConstants = getAnnotation(method, Queries.class);
         final Params paramConstants = getAnnotation(method, Params.class);
-        checkMethod(httpMethod, bodyType, params, file);
+        checkMethod(httpMethod, bodyType, params, rawValue);
         return new RestMethod(httpMethod, pathFormat, bodyType, paths, headers, queries, params, extras,
-                headerConstants, queryConstants, paramConstants, file);
+                headerConstants, queryConstants, paramConstants, rawValue);
     }
 
     private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
@@ -138,7 +138,7 @@ public final class RestMethod {
     }
 
     private static void checkMethod(HttpMethod httpMethod, BodyType bodyType, ArrayList<Pair<Param, Object>> params,
-                                    FileValue file) {
+                                    RawValue fileValue) {
         if (httpMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @" +
                     HttpMethod.class.getSimpleName());
@@ -147,28 +147,29 @@ public final class RestMethod {
         }
     }
 
-    private static <A extends Annotation, T> void addConstantsToMap(final A annotation,
-                                                                    final ValueMap valuesPool,
-                                                                    final MultiValueMap<T> map,
-                                                                    final Converter<T> converter)
-            throws RestConverter.ConvertException, IOException {
-        iterateOverConstants(annotation, new ConstantIterateConsumer() {
+    private static <A extends Annotation, T, E extends Exception> void addConstants(final A annotation,
+                                                                                    final ValueMap valuesPool,
+                                                                                    final Converter<T, E> converter,
+                                                                                    final MultiValueMap<T> target)
+            throws RestConverter.ConvertException, IOException, E {
+        consumeConstants(annotation, new ConstantIterateConsumer<E>() {
             @Override
-            public void consume(KeyValue item) throws RestConverter.ConvertException, IOException {
+            public void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E {
                 final String key = item.key(), value = item.value(), valueKey = item.valueKey();
                 if (valueKey.length() > 0 && valuesPool != null) {
                     if (valuesPool.has(valueKey)) {
-                        map.addAll(key, converter.convert(valuesPool.get(valueKey), item.arrayDelimiter()));
+                        target.addAll(key, converter.convert(valuesPool.get(valueKey), item.arrayDelimiter()));
                     }
                 } else {
-                    map.addAll(key, converter.convert(value, item.arrayDelimiter()));
+                    target.addAll(key, converter.convert(value, item.arrayDelimiter()));
                 }
             }
         });
     }
 
-    private static <T extends Annotation> void iterateOverArguments(ArrayList<Pair<T, Object>> list, ArgumentIterateConsumer consumer)
-            throws RestConverter.ConvertException, IOException {
+    private static <T extends Annotation, E extends Exception> void consumeArguments(final ArrayList<Pair<T, Object>> list,
+                                                                                     final ArgumentIterateConsumer<E> consumer)
+            throws RestConverter.ConvertException, IOException, E {
         if (list == null) return;
         for (Pair<?, Object> pair : list) {
             if (pair.first instanceof Header) {
@@ -182,8 +183,8 @@ public final class RestMethod {
 
     }
 
-    private static <T extends Annotation> void iterateOverConstants(T annotation, ConstantIterateConsumer consumer)
-            throws RestConverter.ConvertException, IOException {
+    private static <T extends Annotation, E extends Exception> void consumeConstants(T annotation, ConstantIterateConsumer<E> consumer)
+            throws RestConverter.ConvertException, IOException, E {
         if (annotation == null) return;
         KeyValue[] items;
         if (annotation instanceof Headers) {
@@ -200,22 +201,23 @@ public final class RestMethod {
         }
     }
 
-    private static <A extends Annotation, O> void addArgumentsToMap(ArrayList<Pair<A, Object>> list,
-                                                                    final MultiValueMap<O> map,
-                                                                    final Converter<O> converter)
-            throws RestConverter.ConvertException, IOException {
-        iterateOverArguments(list, new ArgumentIterateConsumer() {
+    private static <A extends Annotation, O, E extends Exception> void addArgumentsToMap(ArrayList<Pair<A, Object>> list,
+                                                                                         final MultiValueMap<O> map,
+                                                                                         final Converter<O, E> converter)
+            throws RestConverter.ConvertException, IOException, E {
+        consumeArguments(list, new ArgumentIterateConsumer<E>() {
             @Override
             public void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException,
-                    IOException {
+                    IOException, E {
                 addToMap(names, object, map, arrayDelimiter, converter);
             }
         });
     }
 
-    private static <T> void addToMap(String[] names, Object object, MultiValueMap<T> map, char arrayDelimiter,
-                                     Converter<T> converter)
-            throws RestConverter.ConvertException, IOException {
+    private static <T, E extends Exception> void addToMap(final String[] names, final Object object,
+                                                          final MultiValueMap<T> map, final char arrayDelimiter,
+                                                          final Converter<T, E> converter)
+            throws RestConverter.ConvertException, IOException, E {
         if (object == null) {
             for (String name : names) {
                 map.add(name, null);
@@ -300,76 +302,69 @@ public final class RestMethod {
         return sb.toString();
     }
 
-    public MultiValueMap<String> getHeaders(final ValueMap valuesPool) throws RestConverter.ConvertException, IOException {
+    public MultiValueMap<String> getHeaders(final ValueMap valuesPool) throws RestConverter.ConvertException, IOException, E {
         if (headersCache != null) return headersCache;
         final MultiValueMap<String> map = new MultiValueMap<>(true);
-        final Converter<String> converter = new Converter<String>() {
+        final Converter<String, E> converter = new Converter<String, E>() {
             @Override
             public String[] convert(Object from, char arrayDelimiter) throws RestConverter.ConvertException, IOException {
-                if (from == null) {
-                    return new String[]{null};
-                } else if (from instanceof HeaderValue) {
-                    return new String[]{((HeaderValue) from).toHeaderValue()};
-                } else {
-                    return new String[]{from.toString()};
-                }
+                if (from == null) return new String[]{null};
+                else if (from instanceof HeaderValue) return new String[]{((HeaderValue) from).toHeaderValue()};
+                else return new String[]{from.toString()};
             }
         };
         addArgumentsToMap(headers, map, converter);
-        addConstantsToMap(headerConstants, valuesPool, map, converter);
+        addConstants(headerConstants, valuesPool, converter, map);
         return headersCache = map;
     }
 
-    public MultiValueMap<String> getQueries(ValueMap valuesPool) throws RestConverter.ConvertException, IOException {
+    public MultiValueMap<String> getQueries(ValueMap valuesPool) throws RestConverter.ConvertException, IOException, E {
         if (queriesCache != null) return queriesCache;
         final MultiValueMap<String> list = new MultiValueMap<>();
         final int queryIndex = path.indexOf('?');
         if (queryIndex != -1) {
             Utils.parseQuery(path.substring(queryIndex + 1), Charset.defaultCharset().name(), list);
         }
-        final Converter<String> converter = new Converter<String>() {
+        final Converter<String, E> converter = new Converter<String, E>() {
             @Override
             public String[] convert(Object from, char arrayDelimiter) throws RestConverter.ConvertException, IOException {
-                if (from == null) {
-                    return new String[]{null};
-                } else {
-                    return new String[]{from.toString()};
-                }
+                if (from == null) return new String[]{null};
+                return new String[]{from.toString()};
             }
         };
         addArgumentsToMap(queries, list, converter);
-        addConstantsToMap(queryConstants, valuesPool, list, converter);
+        addConstants(queryConstants, valuesPool, converter, list);
         return queriesCache = list;
     }
 
-    public MultiValueMap<Body> getParams(final RestConverter.Factory factory, ValueMap valuesPool)
-            throws RestConverter.ConvertException, IOException {
+    public MultiValueMap<Body> getParams(final RestConverter.Factory<E> factory, ValueMap valuesPool)
+            throws RestConverter.ConvertException, IOException, E {
         if (paramsCache != null) return paramsCache;
         final MultiValueMap<Body> map = new MultiValueMap<>();
-        final Converter<Body> converter = new Converter<Body>() {
+        final Converter<Body, E> converter = new Converter<Body, E>() {
             @Override
-            public Body[] convert(Object argument, char arrayDelimiter) throws IOException, RestConverter.ConvertException {
+            public Body[] convert(Object argument, char arrayDelimiter) throws IOException, RestConverter.ConvertException, E {
                 return Utils.toBodies(argument, factory, arrayDelimiter);
             }
         };
         addArgumentsToMap(params, map, converter);
-        addConstantsToMap(paramConstants, valuesPool, map, converter);
+        addConstants(paramConstants, valuesPool, converter, map);
         return paramsCache = map;
     }
 
-    public RestRequest toRestRequest(RestConverter.Factory factory, ValueMap valuesPool)
-            throws RestConverter.ConvertException, IOException {
+    public RestRequest toRestRequest(RestConverter.Factory<E> factory, ValueMap valuesPool)
+            throws RestConverter.ConvertException, IOException, E {
         final HttpMethod method = getMethod();
-        return new RestRequest(method.value(), method.hasBody(), getPath(), getHeaders(valuesPool),
-                getQueries(valuesPool), getParams(factory, valuesPool), getFile(), getBodyType(), getExtras());
+        return new RestRequest(method.value(), method.hasBody(), getPath(), getHeaders(valuesPool), getQueries(valuesPool),
+                getParams(factory, valuesPool), getRawValue(), getBodyType(), getExtras());
     }
 
     public BodyType getBodyType() {
         return bodyType;
     }
 
-    public FileValue getFile() {
-        return file;
+    public RawValue getRawValue() {
+        return rawValue;
     }
 
     private String findPathReplacement(String key) {
@@ -385,15 +380,15 @@ public final class RestMethod {
         return null;
     }
 
-    interface Converter<T> {
-        T[] convert(Object object, char arrayDelimiter) throws RestConverter.ConvertException, IOException;
+    interface Converter<T, E extends Exception> {
+        T[] convert(Object object, char arrayDelimiter) throws RestConverter.ConvertException, IOException, E;
     }
 
-    interface ArgumentIterateConsumer {
-        void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException, IOException;
+    interface ArgumentIterateConsumer<E extends Exception> {
+        void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException, IOException, E;
     }
 
-    interface ConstantIterateConsumer {
-        void consume(KeyValue item) throws RestConverter.ConvertException, IOException;
+    interface ConstantIterateConsumer<E extends Exception> {
+        void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E;
     }
 }

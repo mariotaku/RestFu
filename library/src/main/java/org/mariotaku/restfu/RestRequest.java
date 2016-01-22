@@ -18,7 +18,7 @@ package org.mariotaku.restfu;
 
 
 import org.mariotaku.restfu.http.BodyType;
-import org.mariotaku.restfu.http.FileValue;
+import org.mariotaku.restfu.http.RawValue;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.ValueMap;
 import org.mariotaku.restfu.http.mime.Body;
@@ -38,7 +38,7 @@ public final class RestRequest {
     private final MultiValueMap<String> headers;
     private final MultiValueMap<String> queries;
     private final MultiValueMap<Body> params;
-    private final FileValue file;
+    private final RawValue file;
     private final BodyType bodyType;
     private final Map<String, Object> extras;
 
@@ -49,7 +49,7 @@ public final class RestRequest {
                        MultiValueMap<String> headers,
                        MultiValueMap<String> queries,
                        MultiValueMap<Body> params,
-                       FileValue file, BodyType bodyType, Map<String, Object> extras) {
+                       RawValue file, BodyType bodyType, Map<String, Object> extras) {
         this.method = method;
         this.hasBody = hasBody;
         this.path = path;
@@ -128,22 +128,22 @@ public final class RestRequest {
      * <p>
      * Use this method if you want to modify requests <b>before</b> normal HTTP request created.
      * </p>
-     * <p></p>
+     * <br>
      * <p>
      * When using OAuth authorization, this would be very useful, because normal HTTP request cannot
      * be modified once OAuth signature generated.
      * </p>
      */
-    public interface Factory {
+    public interface Factory<E extends Exception> {
 
-        RestRequest create(RestMethod restMethod, RestConverter.Factory factory, ValueMap valuePool)
-                throws RestConverter.ConvertException, IOException;
+        RestRequest create(RestMethod<E> restMethod, RestConverter.Factory<E> factory, ValueMap valuePool)
+                throws RestConverter.ConvertException, IOException, E;
     }
 
-    public static class DefaultFactory implements Factory {
+    public static class DefaultFactory<E extends Exception> implements Factory<E> {
         @Override
-        public RestRequest create(RestMethod restMethod, RestConverter.Factory factory, ValueMap valuePool)
-                throws RestConverter.ConvertException, IOException {
+        public RestRequest create(RestMethod<E> restMethod, RestConverter.Factory<E> factory, ValueMap valuePool)
+                throws RestConverter.ConvertException, IOException, E {
             return restMethod.toRestRequest(factory, valuePool);
         }
     }

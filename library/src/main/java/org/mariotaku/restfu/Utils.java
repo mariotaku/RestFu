@@ -66,7 +66,8 @@ public class Utils {
     }
 
     /**
-     * @param value string to be encoded
+     * @param value    string to be encoded
+     * @param encoding URL encoding
      * @return encoded string
      * @see <a href="http://wiki.oauth.net/TestCases">OAuth / TestCases</a>
      * @see <a
@@ -161,8 +162,8 @@ public class Utils {
         }
     }
 
-    public static Body[] toBodies(Object value, RestConverter.Factory factory, char delimiter)
-            throws RestConverter.ConvertException, IOException {
+    public static <E extends Exception> Body[] toBodies(Object value, RestConverter.Factory<E> factory, char delimiter)
+            throws RestConverter.ConvertException, IOException, E {
         if (value == null) throw new NullPointerException();
         final Class<?> valueClass = value.getClass();
         if (valueClass.isArray()) {
@@ -190,12 +191,13 @@ public class Utils {
     }
 
 
-    public static Body toBody(Object obj, RestConverter.Factory factory) throws RestConverter.ConvertException, IOException {
+    public static <E extends Exception> Body toBody(Object obj, RestConverter.Factory<E> factory)
+            throws RestConverter.ConvertException, IOException, E {
         if (obj == null)
             return null;
         final Class<?> cls = obj.getClass();
         //noinspection unchecked
-        final RestConverter<Object, Body> converter = (RestConverter<Object, Body>)
+        final RestConverter<Object, Body, E> converter = (RestConverter<Object, Body, E>)
                 factory.toParam(cls);
         if (converter == null) throw new RestConverter.UnsupportedTypeException(cls);
         return converter.convert(obj);

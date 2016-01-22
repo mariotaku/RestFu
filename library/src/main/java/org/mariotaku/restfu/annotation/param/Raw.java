@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface File {
+public @interface Raw {
     String contentType() default "";
 
     String encoding() default "";

@@ -26,24 +26,24 @@ import java.lang.reflect.Type;
 /**
  * Created by mariotaku on 15/2/6.
  */
-public interface RestConverter<F, T> {
+public interface RestConverter<F, T, E extends Exception> {
 
-    T convert(F from) throws ConvertException, IOException;
+    T convert(F from) throws ConvertException, IOException, E;
 
-    interface Factory {
+    interface Factory<E extends Exception> {
 
-        RestConverter<HttpResponse, ?> fromResponse(Type toType);
+        RestConverter<HttpResponse, ?, E> fromResponse(Type toType);
 
-        RestConverter<?, Body> toParam(Type fromType);
+        RestConverter<?, Body, E> toParam(Type fromType);
     }
 
-    abstract class SimpleFactory implements Factory {
+    abstract class SimpleFactory<E extends Exception> implements Factory<E> {
         @Override
-        public RestConverter<?, Body> toParam(Type fromType) {
-            return new SimpleBodyConverter(fromType);
+        public RestConverter<?, Body, E> toParam(Type fromType) {
+            return new SimpleBodyConverter<>(fromType);
         }
 
-        public static class SimpleBodyConverter implements RestConverter<Object, Body> {
+        public static class SimpleBodyConverter<E extends Exception> implements RestConverter<Object, Body, E> {
             private final Type fromType;
 
             public SimpleBodyConverter(Type fromType) {
@@ -58,7 +58,25 @@ public interface RestConverter<F, T> {
     }
 
     class ConvertException extends Exception {
+        public ConvertException() {
+            super();
+        }
 
+        public ConvertException(String message) {
+            super(message);
+        }
+
+        public ConvertException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public ConvertException(Throwable cause) {
+            super(cause);
+        }
+
+        protected ConvertException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
     }
 
     class UnsupportedTypeException extends RuntimeException {

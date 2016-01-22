@@ -8,7 +8,7 @@ import org.mariotaku.restfu.okhttp.OkHttpRestClient;
  */
 public class Main {
     public static void main(String[] args) throws GithubException {
-        RestAPIFactory factory = new RestAPIFactory();
+        RestAPIFactory<GithubException> factory = new RestAPIFactory<>();
         factory.setHttpClient(new OkHttpRestClient(new OkHttpClient()));
         factory.setEndpoint(new Endpoint("https://api.github.com"));
         factory.setExceptionFactory(new GithubExceptionFactory());

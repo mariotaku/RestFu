@@ -18,13 +18,13 @@ package org.mariotaku.restfu.http;
 
 import org.mariotaku.restfu.http.mime.BaseBody;
 import org.mariotaku.restfu.http.mime.Body;
-import org.mariotaku.restfu.annotation.param.File;
+import org.mariotaku.restfu.annotation.param.Raw;
 
 /**
  * Created by mariotaku on 15/2/6.
  */
-public final class FileValue {
-    private final File annotation;
+public final class RawValue {
+    private final Raw annotation;
     private final Object value;
 
     @Override
@@ -35,7 +35,7 @@ public final class FileValue {
                 '}';
     }
 
-    public FileValue(File annotation, Object value) {
+    public RawValue(Raw annotation, Object value) {
         this.annotation = annotation;
         this.value = value;
     }

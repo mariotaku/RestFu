@@ -5,9 +5,9 @@ import org.mariotaku.restfu.http.HttpResponse;
 /**
  * Created by mariotaku on 16/1/17.
  */
-public class GithubExceptionFactory implements ExceptionFactory {
+public class GithubExceptionFactory implements ExceptionFactory<GithubException> {
     @Override
-    public Exception newException(Throwable cause, HttpRequest request, HttpResponse response) {
+    public GithubException newException(Throwable cause, HttpRequest request, HttpResponse response) {
         return new GithubException();
     }
 }

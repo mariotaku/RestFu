@@ -11,19 +11,19 @@ import java.lang.reflect.Type;
 /**
  * Created by mariotaku on 16/1/17.
  */
-public class GithubConverterFactory implements RestConverter.Factory {
+public class GithubConverterFactory implements RestConverter.Factory<GithubException> {
 
     @Override
-    public RestConverter<HttpResponse, ?> fromResponse(Type toType) {
+    public RestConverter<HttpResponse, ?, GithubException> fromResponse(Type toType) {
         return new JsonConverter(toType);
     }
 
     @Override
-    public RestConverter<?, Body> toParam(Type fromType) {
+    public RestConverter<?, Body, GithubException> toParam(Type fromType) {
         return new ParamBodyConverter();
     }
 
-    private static class JsonConverter implements RestConverter<HttpResponse, Object> {
+    private static class JsonConverter implements RestConverter<HttpResponse, Object, GithubException> {
         private final Type toType;
         Gson gson = new Gson();
 
@@ -37,7 +37,7 @@ public class GithubConverterFactory implements RestConverter.Factory {
         }
     }
 
-    private static class ParamBodyConverter implements RestConverter<Object, Body> {
+    private static class ParamBodyConverter implements RestConverter<Object, Body, GithubException> {
         @Override
         public Body convert(Object from) throws ConvertException, IOException {
             return BaseBody.wrap(from);
