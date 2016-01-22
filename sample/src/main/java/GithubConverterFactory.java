@@ -14,12 +14,12 @@ import java.lang.reflect.Type;
 public class GithubConverterFactory implements RestConverter.Factory<GithubException> {
 
     @Override
-    public RestConverter<HttpResponse, ?, GithubException> fromResponse(Type toType) {
+    public RestConverter<HttpResponse, ?, GithubException> forResponse(Type toType) {
         return new JsonConverter(toType);
     }
 
     @Override
-    public RestConverter<?, Body, GithubException> toParam(Type fromType) {
+    public RestConverter<?, Body, GithubException> forRequest(Type fromType) {
         return new ParamBodyConverter();
     }
 

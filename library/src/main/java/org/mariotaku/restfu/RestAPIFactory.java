@@ -170,7 +170,7 @@ public class RestAPIFactory<E extends Exception> {
                     return null;
                 }
                 final Type returnType = method.getGenericReturnType();
-                return converterFactory.fromResponse(returnType).convert(httpResponse);
+                return converterFactory.forResponse(returnType).convert(httpResponse);
             } catch (IOException e) {
                 onError(e, httpRequest, httpResponse, args);
                 return null;

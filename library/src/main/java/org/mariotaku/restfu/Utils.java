@@ -198,7 +198,7 @@ public class Utils {
         final Class<?> cls = obj.getClass();
         //noinspection unchecked
         final RestConverter<Object, Body, E> converter = (RestConverter<Object, Body, E>)
-                factory.toParam(cls);
+                factory.forRequest(cls);
         if (converter == null) throw new RestConverter.UnsupportedTypeException(cls);
         return converter.convert(obj);
     }
