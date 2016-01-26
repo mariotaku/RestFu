@@ -192,10 +192,12 @@ public class RestAPIFactory<E extends Exception> {
         private void onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
                              final Object[] args) throws Exception {
             final Exception exception = exceptionFactory.newException(cause, httpRequest, response);
-            for (Object arg : args) {
-                if (arg instanceof ErrorCallback) {
-                    ((ErrorCallback) arg).error(exception);
-                    return;
+            if (args != null) {
+                for (Object arg : args) {
+                    if (arg instanceof ErrorCallback) {
+                        ((ErrorCallback) arg).error(exception);
+                        return;
+                    }
                 }
             }
             throw exception;
