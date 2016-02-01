@@ -21,19 +21,21 @@ import org.mariotaku.restfu.http.ContentType;
 import org.mariotaku.restfu.io.StreamingGZIPInputStream;
 
 import java.io.*;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
-public class BaseBody implements Body {
+public class SimpleBody implements Body {
 
     private final ContentType contentType;
     private final long contentLength;
     private final InputStream stream;
     private final String contentEncoding;
 
-    public BaseBody(ContentType contentType, String contentEncoding, long contentLength, InputStream stream) throws IOException {
+    public SimpleBody(ContentType contentType, String contentEncoding, long contentLength, InputStream stream) throws IOException {
         this.contentType = contentType;
         this.contentEncoding = contentEncoding;
         this.contentLength = contentLength;
@@ -101,6 +103,35 @@ public class BaseBody implements Body {
             return new StringBody(value.toString(), Charset.defaultCharset());
         }
         throw new UnsupportedOperationException(value.getClass().toString());
+    }
+
+    public static boolean supports(Type value) {
+        if (value instanceof Class) {
+            return supportsClass((Class<?>) value);
+        } else if (value instanceof ParameterizedType) {
+            Type rawType = ((ParameterizedType) value).getRawType();
+            if (rawType instanceof Class) {
+                return supportsClass((Class<?>) rawType);
+            }
+        }
+        return false;
+    }
+
+    private static boolean supportsClass(Class<?> value) {
+        if (Body.class.isAssignableFrom(value)) {
+            return true;
+        } else if (value == File.class) {
+            return true;
+        } else if (value == String.class) {
+            return true;
+        } else if (Number.class.isAssignableFrom(value)) {
+            return true;
+        } else if (value == Character.class) {
+            return true;
+        } else if (value == Boolean.class) {
+            return true;
+        }
+        return false;
     }
 
     public static Reader reader(Body data) throws IOException {

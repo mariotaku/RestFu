@@ -17,8 +17,8 @@
 package org.mariotaku.restfu;
 
 import org.mariotaku.restfu.http.HttpResponse;
-import org.mariotaku.restfu.http.mime.BaseBody;
 import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.SimpleBody;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -40,6 +40,7 @@ public interface RestConverter<F, T, E extends Exception> {
     abstract class SimpleFactory<E extends Exception> implements Factory<E> {
         @Override
         public RestConverter<?, Body, E> forRequest(Type fromType) {
+            if (!SimpleBody.supports(fromType)) throw new UnsupportedTypeException(fromType);
             return new SimpleBodyConverter<>(fromType);
         }
 
@@ -52,7 +53,7 @@ public interface RestConverter<F, T, E extends Exception> {
 
             @Override
             public Body convert(Object from) throws ConvertException, IOException {
-                return BaseBody.wrap(from);
+                return SimpleBody.wrap(from);
             }
         }
     }

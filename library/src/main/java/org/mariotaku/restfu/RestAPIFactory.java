@@ -153,13 +153,13 @@ public class RestAPIFactory<E extends Exception> {
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Exception {
             if (method.getDeclaringClass() == Object.class) {
-                return method.invoke(proxy, args);
+                return method.invoke(this, args);
             } else if (method.getDeclaringClass() == RestClient.class) {
                 return method.invoke(this, args);
             }
             final RestMethod<E> restMethod = RestMethod.get(method, args);
             final RestRequest restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
-            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization,converterFactory);
+            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization, converterFactory);
             HttpCall httpCall = null;
             HttpResponse httpResponse = null;
             try {

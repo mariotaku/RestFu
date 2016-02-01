@@ -1,7 +1,7 @@
 import com.google.gson.Gson;
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.http.HttpResponse;
-import org.mariotaku.restfu.http.mime.BaseBody;
+import org.mariotaku.restfu.http.mime.SimpleBody;
 import org.mariotaku.restfu.http.mime.Body;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class GithubConverterFactory implements RestConverter.Factory<GithubExcep
     private static class ParamBodyConverter implements RestConverter<Object, Body, GithubException> {
         @Override
         public Body convert(Object from) throws ConvertException, IOException {
-            return BaseBody.wrap(from);
+            return SimpleBody.wrap(from);
         }
     }
 }
