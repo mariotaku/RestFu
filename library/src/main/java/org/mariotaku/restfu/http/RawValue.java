@@ -16,9 +16,12 @@
 
 package org.mariotaku.restfu.http;
 
+import org.mariotaku.restfu.RestConverter;
+import org.mariotaku.restfu.annotation.param.Raw;
 import org.mariotaku.restfu.http.mime.BaseBody;
 import org.mariotaku.restfu.http.mime.Body;
-import org.mariotaku.restfu.annotation.param.Raw;
+
+import java.io.IOException;
 
 /**
  * Created by mariotaku on 15/2/6.
@@ -40,7 +43,13 @@ public final class RawValue {
         this.value = value;
     }
 
-    public Body body() {
+    public <E extends Exception> Body body(RestConverter.Factory<E> converterFactory) throws E, IOException,
+            RestConverter.ConvertException {
+        if (value == null) return null;
+        //noinspection unchecked
+        final RestConverter<Object, Body, E> converter =
+                (RestConverter<Object, Body, E>) converterFactory.forRequest(value.getClass());
+        if (converter != null) return converter.convert(value);
         return BaseBody.wrap(value);
     }
 }

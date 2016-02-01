@@ -66,7 +66,9 @@ public final class StringBody implements Body {
 
     private byte[] getBytes() {
         final Charset charset = contentType.getCharset();
-        assert charset != null;
+        if (charset == null) {
+            return value.getBytes();
+        }
         return value.getBytes(charset);
     }
 

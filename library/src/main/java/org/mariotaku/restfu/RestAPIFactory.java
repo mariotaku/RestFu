@@ -159,7 +159,7 @@ public class RestAPIFactory<E extends Exception> {
             }
             final RestMethod<E> restMethod = RestMethod.get(method, args);
             final RestRequest restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
-            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization);
+            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization,converterFactory);
             HttpCall httpCall = null;
             HttpResponse httpResponse = null;
             try {

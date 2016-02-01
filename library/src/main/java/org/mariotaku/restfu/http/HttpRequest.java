@@ -17,8 +17,11 @@
 package org.mariotaku.restfu.http;
 
 
+import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.http.mime.Body;
+
+import java.io.IOException;
 
 /**
  * Created by mariotaku on 15/2/7.
@@ -113,14 +116,17 @@ public final class HttpRequest {
     public static class DefaultFactory implements Factory {
 
         @Override
-        public HttpRequest create(Endpoint endpoint, RestRequest requestInfo, Authorization authorization) {
+        public <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest requestInfo,
+                                                        Authorization authorization,
+                                                        RestConverter.Factory<E> converterFactory) throws E,
+                RestConverter.ConvertException, IOException {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
             final MultiValueMap<String> headers = requestInfo.getHeaders();
 
             if (authorization != null && authorization.hasAuthorization()) {
                 headers.add("Authorization", authorization.getHeader(endpoint, requestInfo));
             }
-            return new HttpRequest(requestInfo.getMethod(), url, headers, requestInfo.getBody(), null);
+            return new HttpRequest(requestInfo.getMethod(), url, headers, requestInfo.getBody(converterFactory), null);
         }
     }
 
@@ -128,6 +134,8 @@ public final class HttpRequest {
      * Created by mariotaku on 15/5/25.
      */
     public interface Factory {
-        HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization);
+        <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
+                                                 RestConverter.Factory<E> converterFactory) throws E,
+                RestConverter.ConvertException, IOException;
     }
 }

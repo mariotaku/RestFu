@@ -18,8 +18,8 @@ package org.mariotaku.restfu;
 
 
 import org.mariotaku.restfu.http.BodyType;
-import org.mariotaku.restfu.http.RawValue;
 import org.mariotaku.restfu.http.MultiValueMap;
+import org.mariotaku.restfu.http.RawValue;
 import org.mariotaku.restfu.http.ValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.FormBody;
@@ -92,7 +92,8 @@ public final class RestRequest {
         return extras;
     }
 
-    public Body getBody() {
+    public <E extends Exception> Body getBody(RestConverter.Factory<E> converterFactory) throws E,
+            RestConverter.ConvertException, IOException {
         if (bodyCache != null) return bodyCache;
         final String bodyType = getBodyType();
         if (bodyType == null) return null;
@@ -106,7 +107,7 @@ public final class RestRequest {
                 break;
             }
             case BodyType.RAW: {
-                bodyCache = file.body();
+                bodyCache = file.body(converterFactory);
                 break;
             }
         }
