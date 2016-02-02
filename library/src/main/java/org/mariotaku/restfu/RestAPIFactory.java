@@ -166,17 +166,14 @@ public class RestAPIFactory<E extends Exception> {
                 httpCall = restClient.newCall(httpRequest);
                 httpResponse = httpCall.execute();
                 if (!httpResponse.isSuccessful()) {
-                    onError(null, httpRequest, httpResponse, args);
-                    return null;
+                    return onError(null, httpRequest, httpResponse, args);
                 }
                 final Type returnType = method.getGenericReturnType();
                 return converterFactory.forResponse(returnType).convert(httpResponse);
             } catch (IOException e) {
-                onError(e, httpRequest, httpResponse, args);
-                return null;
+                return onError(e, httpRequest, httpResponse, args);
             } catch (RestConverter.ConvertException e) {
-                onError(e, httpRequest, httpResponse, args);
-                return null;
+                return onError(e, httpRequest, httpResponse, args);
             } catch (InvocationTargetException e) {
                 throw new RuntimeException(e);
             } catch (NoSuchMethodException e) {
@@ -189,14 +186,14 @@ public class RestAPIFactory<E extends Exception> {
             }
         }
 
-        private void onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
-                             final Object[] args) throws Exception {
+        private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
+                               final Object[] args) throws Exception {
             final Exception exception = exceptionFactory.newException(cause, httpRequest, response);
             if (args != null) {
                 for (Object arg : args) {
                     if (arg instanceof ErrorCallback) {
                         ((ErrorCallback) arg).error(exception);
-                        return;
+                        return null;
                     }
                 }
             }
