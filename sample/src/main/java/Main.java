@@ -1,4 +1,4 @@
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.OkHttpClient;
 import org.mariotaku.restfu.RestAPIFactory;
 import org.mariotaku.restfu.http.Endpoint;
 import org.mariotaku.restfu.okhttp.OkHttpRestClient;
