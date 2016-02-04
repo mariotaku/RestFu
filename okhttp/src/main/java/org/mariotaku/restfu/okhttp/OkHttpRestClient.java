@@ -29,8 +29,10 @@ import java.io.OutputStream;
 import java.util.List;
 
 /**
+ * @deprecated Use okhttp3 instead
  * Created by mariotaku on 15/5/5.
  */
+@Deprecated
 public class OkHttpRestClient implements RestHttpClient {
 
     private final OkHttpClient client;

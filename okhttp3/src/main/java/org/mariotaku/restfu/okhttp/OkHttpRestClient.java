@@ -33,10 +33,10 @@ import java.util.List;
  */
 public class OkHttpRestClient implements RestHttpClient {
 
-    private final OkHttpClient client;
+    private OkHttpClient client;
 
     public OkHttpRestClient(OkHttpClient client) {
-        this.client = client;
+        setClient(client);
     }
 
     @Override
@@ -56,6 +56,11 @@ public class OkHttpRestClient implements RestHttpClient {
     @Override
     public void enqueue(final HttpCall call, final HttpCallback callback) {
         call.enqueue(callback);
+    }
+
+    public void setClient(OkHttpClient client) {
+        if (client == null) throw new NullPointerException();
+        this.client = client;
     }
 
     public OkHttpClient getClient() {
