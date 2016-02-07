@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod(value = "POST", hasBody = true)
+@HttpMethod(value = "POST", allowBody = true)
 public @interface POST {
     String METHOD = "POST";
 

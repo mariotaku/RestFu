@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod(value = PATCH.METHOD, hasBody = true)
+@HttpMethod(value = PATCH.METHOD, allowBody = true)
 public @interface PATCH {
     String METHOD = "PATCH";
 

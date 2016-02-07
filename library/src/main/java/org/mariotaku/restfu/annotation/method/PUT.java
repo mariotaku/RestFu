@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod(value = PUT.METHOD, hasBody = true)
+@HttpMethod(value = PUT.METHOD, allowBody = true)
 public @interface PUT {
     String METHOD = "PUT";
 

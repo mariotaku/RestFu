@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod(value = GET.METHOD, hasBody = false)
+@HttpMethod(value = GET.METHOD, allowBody = false)
 public @interface GET {
     String METHOD = "GET";
 

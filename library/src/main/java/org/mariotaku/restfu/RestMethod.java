@@ -129,7 +129,7 @@ public final class RestMethod<E extends Exception> {
         final Queries queryConstants = getAnnotation(method, Queries.class);
         final Params paramConstants = getAnnotation(method, Params.class);
         checkMethod(httpMethod, bodyType, params, rawValue);
-        return new RestMethod(httpMethod, pathFormat, bodyType, paths, headers, queries, params, extras,
+        return new RestMethod<>(httpMethod, pathFormat, bodyType, paths, headers, queries, params, extras,
                 headerConstants, queryConstants, paramConstants, rawValue);
     }
 
@@ -142,7 +142,8 @@ public final class RestMethod<E extends Exception> {
         if (httpMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @" +
                     HttpMethod.class.getSimpleName());
-        if (!httpMethod.hasBody() && bodyType != null) {
+        final boolean hasBody = !params.isEmpty() || fileValue != null;
+        if (!httpMethod.allowBody() && hasBody) {
             throw new IllegalArgumentException(httpMethod.value() + " does not allow body");
         }
     }
@@ -355,7 +356,7 @@ public final class RestMethod<E extends Exception> {
     public RestRequest toRestRequest(RestConverter.Factory<E> factory, ValueMap valuesPool)
             throws RestConverter.ConvertException, IOException, E {
         final HttpMethod method = getMethod();
-        return new RestRequest(method.value(), method.hasBody(), getPath(), getHeaders(valuesPool), getQueries(valuesPool),
+        return new RestRequest(method.value(), method.allowBody(), getPath(), getHeaders(valuesPool), getQueries(valuesPool),
                 getParams(factory, valuesPool), getRawValue(), getBodyType(), getExtras());
     }
 

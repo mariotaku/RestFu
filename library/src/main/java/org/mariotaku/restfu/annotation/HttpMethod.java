@@ -30,5 +30,5 @@ public @interface HttpMethod {
 
     String value();
 
-    boolean hasBody() default false;
+    boolean allowBody() default false;
 }
