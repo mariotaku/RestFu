@@ -181,8 +181,8 @@ public class RestAPIFactory<E extends Exception> {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } finally {
-                Utils.closeSilently(httpResponse);
-                Utils.closeSilently(httpCall);
+                RestFuUtils.closeSilently(httpResponse);
+                RestFuUtils.closeSilently(httpCall);
             }
         }
 

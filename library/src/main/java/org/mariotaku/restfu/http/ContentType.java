@@ -18,7 +18,7 @@ package org.mariotaku.restfu.http;
 
 
 import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.Utils;
+import org.mariotaku.restfu.RestFuUtils;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -108,9 +108,9 @@ public final class ContentType {
             final int idx = string.indexOf(';', previousIndex + 1);
             final String[] segs;
             if (idx < 0) {
-                segs = Utils.split(string.substring(previousIndex + 1, string.length()).trim(), "=");
+                segs = RestFuUtils.split(string.substring(previousIndex + 1, string.length()).trim(), "=");
             } else {
-                segs = Utils.split(string.substring(previousIndex + 1, idx).trim(), "=");
+                segs = RestFuUtils.split(string.substring(previousIndex + 1, idx).trim(), "=");
             }
             if (segs.length == 2) {
                 parameters.add(Pair.create(segs[0], segs[1]));

@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * Created by mariotaku on 15/2/4.
  */
-public class Utils {
+public class RestFuUtils {
     private static final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     public static String[] split(final String str, final String separator) {
@@ -237,6 +237,21 @@ public class Utils {
             sb.append('=');
             sb.append(encode(form.second, charset.name()));
         }
+    }
+
+    public static String sanitizeHeader(String header) {
+        if (header == null) return null;
+        final char[] chars = header.toCharArray();
+        for (int i = 0, j = chars.length; i < j; i++) {
+            if (!isAsciiPrintable(chars[i])) {
+                chars[i] = '.';
+            }
+        }
+        return new String(chars);
+    }
+
+    private static boolean isAsciiPrintable(char ch) {
+        return ch >= 0x20 && ch < 0x7f;
     }
 
     public interface KeyValueConsumer {

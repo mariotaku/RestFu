@@ -18,7 +18,7 @@ package org.mariotaku.restfu.http.mime;
 
 
 import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.Utils;
+import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.ContentType;
 import org.mariotaku.restfu.http.MultiValueMap;
 
@@ -53,7 +53,7 @@ public class FormBody implements Body {
     private void toRawBytes() {
         if (bytes != null) return;
         final StringBuilder sb = new StringBuilder();
-        Utils.append(sb, forms, charset);
+        RestFuUtils.append(sb, forms, charset);
         try {
             bytes = sb.toString().getBytes(charset.name());
         } catch (UnsupportedEncodingException e) {

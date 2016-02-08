@@ -18,7 +18,7 @@ package org.mariotaku.restfu.http.mime;
 
 
 import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.Utils;
+import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.ContentType;
 
 import java.io.*;
@@ -51,7 +51,7 @@ public class MultipartBody implements Body {
     public MultipartBody(List<Pair<String, Body>> parts) {
         this.parts = parts;
         this.contentType = ContentType.parse("multipart/form-data");
-        final String boundary = Utils.bytesToHex(UUID.randomUUID().toString().getBytes());
+        final String boundary = RestFuUtils.bytesToHex(UUID.randomUUID().toString().getBytes());
         contentType.addParameter("boundary", boundary);
         boundaryBytes = boundary.getBytes();
     }
@@ -169,7 +169,7 @@ public class MultipartBody implements Body {
 
         @Override
         public void write(final byte[] buffer, final int offset, final int count) throws IOException {
-            Utils.checkOffsetAndCount(buffer.length, offset, count);
+            RestFuUtils.checkOffsetAndCount(buffer.length, offset, count);
             add(count);
         }
 

@@ -18,7 +18,7 @@ package org.mariotaku.restfu.http;
 
 
 import org.mariotaku.restfu.RestRequest;
-import org.mariotaku.restfu.Utils;
+import org.mariotaku.restfu.RestFuUtils;
 
 import java.nio.charset.Charset;
 
@@ -88,7 +88,7 @@ public class Endpoint {
         if (queries == null || queries.isEmpty()) return url;
         final StringBuilder urlBuilder = new StringBuilder(url);
         urlBuilder.append('?');
-        Utils.append(urlBuilder, queries, Charset.forName("UTF-8"));
+        RestFuUtils.append(urlBuilder, queries, Charset.forName("UTF-8"));
         return urlBuilder.toString();
     }
 

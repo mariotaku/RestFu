@@ -1,4 +1,5 @@
 import org.mariotaku.restfu.annotation.method.GET;
+import org.mariotaku.restfu.annotation.param.Headers;
 import org.mariotaku.restfu.annotation.param.KeyValue;
 import org.mariotaku.restfu.annotation.param.Path;
 import org.mariotaku.restfu.annotation.param.Queries;
@@ -12,5 +13,6 @@ public interface Github {
 
     @GET("/repos/{owner}/{repo}/contributors")
     @Queries(@KeyValue(key = "test", value = "ok"))
+    @Headers(@KeyValue(key = "X-Invalid-Character", value = "无效字符"))
     List<Contributor> contributors(@Path(value = "owner") String owner, @Path(value = "repo") String repo) throws GithubException;
 }

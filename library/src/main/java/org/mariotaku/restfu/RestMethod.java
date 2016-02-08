@@ -128,131 +128,9 @@ public final class RestMethod<E extends Exception> {
         final Headers headerConstants = getAnnotation(method, Headers.class);
         final Queries queryConstants = getAnnotation(method, Queries.class);
         final Params paramConstants = getAnnotation(method, Params.class);
-        checkMethod(httpMethod, bodyType, params, rawValue);
+        checkMethod(httpMethod, params, rawValue);
         return new RestMethod<>(httpMethod, pathFormat, bodyType, paths, headers, queries, params, extras,
                 headerConstants, queryConstants, paramConstants, rawValue);
-    }
-
-    private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
-        return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
-    }
-
-    private static void checkMethod(HttpMethod httpMethod, BodyType bodyType, ArrayList<Pair<Param, Object>> params,
-                                    RawValue fileValue) {
-        if (httpMethod == null)
-            throw new MethodNotImplementedException("Method must has annotation annotated with @" +
-                    HttpMethod.class.getSimpleName());
-        final boolean hasBody = !params.isEmpty() || fileValue != null;
-        if (!httpMethod.allowBody() && hasBody) {
-            throw new IllegalArgumentException(httpMethod.value() + " does not allow body");
-        }
-    }
-
-    private static <A extends Annotation, T, E extends Exception> void addConstants(final A annotation,
-                                                                                    final ValueMap valuesPool,
-                                                                                    final Converter<T, E> converter,
-                                                                                    final MultiValueMap<T> target)
-            throws RestConverter.ConvertException, IOException, E {
-        consumeConstants(annotation, new ConstantIterateConsumer<E>() {
-            @Override
-            public void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E {
-                final String key = item.key(), value = item.value(), valueKey = item.valueKey();
-                if (valueKey.length() > 0 && valuesPool != null) {
-                    if (valuesPool.has(valueKey)) {
-                        target.addAll(key, converter.convert(valuesPool.get(valueKey), item.arrayDelimiter()));
-                    }
-                } else {
-                    target.addAll(key, converter.convert(value, item.arrayDelimiter()));
-                }
-            }
-        });
-    }
-
-    private static <T extends Annotation, E extends Exception> void consumeArguments(final ArrayList<Pair<T, Object>> list,
-                                                                                     final ArgumentIterateConsumer<E> consumer)
-            throws RestConverter.ConvertException, IOException, E {
-        if (list == null) return;
-        for (Pair<?, Object> pair : list) {
-            if (pair.first instanceof Header) {
-                consumer.consume(((Header) pair.first).value(), ((Header) pair.first).arrayDelimiter(), pair.second);
-            } else if (pair.first instanceof Param) {
-                consumer.consume(((Param) pair.first).value(), ((Param) pair.first).arrayDelimiter(), pair.second);
-            } else if (pair.first instanceof Query) {
-                consumer.consume(((Query) pair.first).value(), ((Query) pair.first).arrayDelimiter(), pair.second);
-            }
-        }
-
-    }
-
-    private static <T extends Annotation, E extends Exception> void consumeConstants(T annotation, ConstantIterateConsumer<E> consumer)
-            throws RestConverter.ConvertException, IOException, E {
-        if (annotation == null) return;
-        KeyValue[] items;
-        if (annotation instanceof Headers) {
-            items = ((Headers) annotation).value();
-        } else if (annotation instanceof Queries) {
-            items = ((Queries) annotation).value();
-        } else if (annotation instanceof Params) {
-            items = ((Params) annotation).value();
-        } else {
-            throw new UnsupportedOperationException(annotation.getClass().toString());
-        }
-        for (KeyValue item : items) {
-            consumer.consume(item);
-        }
-    }
-
-    private static <A extends Annotation, O, E extends Exception> void addArgumentsToMap(ArrayList<Pair<A, Object>> list,
-                                                                                         final MultiValueMap<O> map,
-                                                                                         final Converter<O, E> converter)
-            throws RestConverter.ConvertException, IOException, E {
-        consumeArguments(list, new ArgumentIterateConsumer<E>() {
-            @Override
-            public void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException,
-                    IOException, E {
-                addToMap(names, object, map, arrayDelimiter, converter);
-            }
-        });
-    }
-
-    private static <T, E extends Exception> void addToMap(final String[] names, final Object object,
-                                                          final MultiValueMap<T> map, final char arrayDelimiter,
-                                                          final Converter<T, E> converter)
-            throws RestConverter.ConvertException, IOException, E {
-        if (object == null) {
-            for (String name : names) {
-                map.add(name, null);
-            }
-        } else if (object instanceof ValueMap) {
-            final ValueMap valueMap = (ValueMap) object;
-            for (String key : getValueMapKeys(names, valueMap)) {
-                if (valueMap.has(key)) {
-                    map.addAll(key, converter.convert(valueMap.get(key), arrayDelimiter));
-                }
-            }
-        } else {
-            for (String name : names) {
-                map.addAll(name, converter.convert(object, arrayDelimiter));
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
-        for (Annotation annotation : annotations) {
-            if (annotationClass.isAssignableFrom(annotation.annotationType())) {
-                return (T) annotation;
-            }
-        }
-        return null;
-    }
-
-    private static <T extends Annotation> T getAnnotation(Method method, Class<T> annotationClass) {
-        T annotation = method.getAnnotation(annotationClass);
-        if (annotation == null) {
-            annotation = method.getDeclaringClass().getAnnotation(annotationClass);
-        }
-        return annotation;
     }
 
     public Map<String, Object> getExtras() {
@@ -309,13 +187,20 @@ public final class RestMethod<E extends Exception> {
         final Converter<String, E> converter = new Converter<String, E>() {
             @Override
             public String[] convert(Object from, char arrayDelimiter) throws RestConverter.ConvertException, IOException {
-                if (from == null) return new String[]{null};
-                else if (from instanceof HeaderValue) return new String[]{((HeaderValue) from).toHeaderValue()};
-                else return new String[]{from.toString()};
+                final String header;
+                if (from == null) {
+                    header = null;
+                } else if (from instanceof HeaderValue) {
+                    header = ((HeaderValue) from).toHeaderValue();
+                } else {
+                    header = from.toString();
+                }
+                return new String[]{header};
             }
         };
-        addArgumentsToMap(headers, map, converter);
-        addConstants(headerConstants, valuesPool, converter, map);
+        final HeaderSanitizer sanitizer = new HeaderSanitizer();
+        addArgumentsToMap(headers, map, converter, sanitizer);
+        addConstants(headerConstants, valuesPool, converter, map, sanitizer);
         return headersCache = map;
     }
 
@@ -324,7 +209,7 @@ public final class RestMethod<E extends Exception> {
         final MultiValueMap<String> list = new MultiValueMap<>();
         final int queryIndex = path.indexOf('?');
         if (queryIndex != -1) {
-            Utils.parseQuery(path.substring(queryIndex + 1), Charset.defaultCharset().name(), list);
+            RestFuUtils.parseQuery(path.substring(queryIndex + 1), Charset.defaultCharset().name(), list);
         }
         final Converter<String, E> converter = new Converter<String, E>() {
             @Override
@@ -333,8 +218,9 @@ public final class RestMethod<E extends Exception> {
                 return new String[]{from.toString()};
             }
         };
-        addArgumentsToMap(queries, list, converter);
-        addConstants(queryConstants, valuesPool, converter, list);
+        final SimpleSanitizer<String> sanitizer = new SimpleSanitizer<>();
+        addArgumentsToMap(queries, list, converter, sanitizer);
+        addConstants(queryConstants, valuesPool, converter, list, sanitizer);
         return queriesCache = list;
     }
 
@@ -345,11 +231,12 @@ public final class RestMethod<E extends Exception> {
         final Converter<Body, E> converter = new Converter<Body, E>() {
             @Override
             public Body[] convert(Object argument, char arrayDelimiter) throws IOException, RestConverter.ConvertException, E {
-                return Utils.toBodies(argument, factory, arrayDelimiter);
+                return RestFuUtils.toBodies(argument, factory, arrayDelimiter);
             }
         };
-        addArgumentsToMap(params, map, converter);
-        addConstants(paramConstants, valuesPool, converter, map);
+        final SimpleSanitizer<Body> sanitizer = new SimpleSanitizer<>();
+        addArgumentsToMap(params, map, converter, sanitizer);
+        addConstants(paramConstants, valuesPool, converter, map, sanitizer);
         return paramsCache = map;
     }
 
@@ -374,11 +261,140 @@ public final class RestMethod<E extends Exception> {
                 if (entry.first.encoded()) {
                     return String.valueOf(entry.second);
                 } else {
-                    return Utils.encode(String.valueOf(entry.second), "UTF-8");
+                    return RestFuUtils.encode(String.valueOf(entry.second), "UTF-8");
                 }
             }
         }
         return null;
+    }
+
+    private static String[] getValueMapKeys(String[] annotationValue, ValueMap valueMap) {
+        return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
+    }
+
+    private static void checkMethod(HttpMethod httpMethod, ArrayList<Pair<Param, Object>> params,
+                                    RawValue fileValue) {
+        if (httpMethod == null)
+            throw new MethodNotImplementedException("Method must has annotation annotated with @" +
+                    HttpMethod.class.getSimpleName());
+        final boolean hasBody = !params.isEmpty() || fileValue != null;
+        if (!httpMethod.allowBody() && hasBody) {
+            throw new IllegalArgumentException(httpMethod.value() + " does not allow body");
+        }
+    }
+
+    private static <A extends Annotation, T, E extends Exception> void addConstants(final A annotation,
+                                                                                    final ValueMap valuesPool,
+                                                                                    final Converter<T, E> converter,
+                                                                                    final MultiValueMap<T> target,
+                                                                                    final Sanitizer<T> sanitizer)
+            throws RestConverter.ConvertException, IOException, E {
+        consumeConstants(annotation, new ConstantIterateConsumer<E>() {
+            @Override
+            public void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E {
+                final String key = item.key(), value = item.value(), valueKey = item.valueKey();
+                if (valueKey.length() > 0 && valuesPool != null) {
+                    if (valuesPool.has(valueKey)) {
+                        final String sanitizedKey = sanitizer.sanitizeKey(key);
+                        final T[] keyValue = converter.convert(valuesPool.get(valueKey), item.arrayDelimiter());
+                        target.addAll(sanitizedKey, sanitizer.sanitizeValue(keyValue));
+                    }
+                } else {
+                    final String sanitizedKey = sanitizer.sanitizeKey(key);
+                    final T[] convertedValue = converter.convert(value, item.arrayDelimiter());
+                    target.addAll(sanitizedKey, sanitizer.sanitizeValue(convertedValue));
+                }
+            }
+        });
+    }
+
+    private static <T extends Annotation, E extends Exception> void consumeArguments(final ArrayList<Pair<T, Object>> list,
+                                                                                     final ArgumentIterateConsumer<E> consumer)
+            throws RestConverter.ConvertException, IOException, E {
+        if (list == null) return;
+        for (Pair<?, Object> pair : list) {
+            if (pair.first instanceof Header) {
+                consumer.consume(((Header) pair.first).value(), ((Header) pair.first).arrayDelimiter(), pair.second);
+            } else if (pair.first instanceof Param) {
+                consumer.consume(((Param) pair.first).value(), ((Param) pair.first).arrayDelimiter(), pair.second);
+            } else if (pair.first instanceof Query) {
+                consumer.consume(((Query) pair.first).value(), ((Query) pair.first).arrayDelimiter(), pair.second);
+            }
+        }
+
+    }
+
+    private static <T extends Annotation, E extends Exception> void consumeConstants(T annotation, ConstantIterateConsumer<E> consumer)
+            throws RestConverter.ConvertException, IOException, E {
+        if (annotation == null) return;
+        KeyValue[] items;
+        if (annotation instanceof Headers) {
+            items = ((Headers) annotation).value();
+        } else if (annotation instanceof Queries) {
+            items = ((Queries) annotation).value();
+        } else if (annotation instanceof Params) {
+            items = ((Params) annotation).value();
+        } else {
+            throw new UnsupportedOperationException(annotation.getClass().toString());
+        }
+        for (KeyValue item : items) {
+            consumer.consume(item);
+        }
+    }
+
+    private static <A extends Annotation, O, E extends Exception> void addArgumentsToMap(ArrayList<Pair<A, Object>> list,
+                                                                                         final MultiValueMap<O> map,
+                                                                                         final Converter<O, E> converter,
+                                                                                         final Sanitizer<O> sanitizer)
+            throws RestConverter.ConvertException, IOException, E {
+        consumeArguments(list, new ArgumentIterateConsumer<E>() {
+            @Override
+            public void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException,
+                    IOException, E {
+                addToMap(names, object, map, arrayDelimiter, converter, sanitizer);
+            }
+        });
+    }
+
+    private static <T, E extends Exception> void addToMap(final String[] names, final Object object,
+                                                          final MultiValueMap<T> map, final char arrayDelimiter,
+                                                          final Converter<T, E> converter, final Sanitizer<T> sanitizer)
+            throws RestConverter.ConvertException, IOException, E {
+        if (object == null) {
+            for (String name : names) {
+                map.addAll(sanitizer.sanitizeKey(name), sanitizer.sanitizeValue(null));
+            }
+        } else if (object instanceof ValueMap) {
+            final ValueMap valueMap = (ValueMap) object;
+            for (String key : getValueMapKeys(names, valueMap)) {
+                final String sanitized = sanitizer.sanitizeKey(key);
+                if (valueMap.has(sanitized)) {
+                    map.addAll(sanitized, sanitizer.sanitizeValue(converter.convert(valueMap.get(key), arrayDelimiter)));
+                }
+            }
+        } else {
+            for (String name : names) {
+                map.addAll(sanitizer.sanitizeKey(name), sanitizer.sanitizeValue(converter.convert(object, arrayDelimiter)));
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> annotationClass) {
+        for (Annotation annotation : annotations) {
+            if (annotationClass.isAssignableFrom(annotation.annotationType())) {
+                return (T) annotation;
+            }
+        }
+        return null;
+    }
+
+    private static <T extends Annotation> T getAnnotation(Method method, Class<T> annotationClass) {
+        T annotation = method.getAnnotation(annotationClass);
+        if (annotation == null) {
+            annotation = method.getDeclaringClass().getAnnotation(annotationClass);
+        }
+        return annotation;
     }
 
     interface Converter<T, E extends Exception> {
@@ -392,4 +408,43 @@ public final class RestMethod<E extends Exception> {
     interface ConstantIterateConsumer<E extends Exception> {
         void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E;
     }
+
+    interface Sanitizer<E> {
+        String sanitizeKey(String in);
+
+        E[] sanitizeValue(E[] in);
+    }
+
+    static class SimpleSanitizer<E> implements Sanitizer<E> {
+
+        @Override
+        public String sanitizeKey(String in) {
+            return in;
+        }
+
+        @Override
+        public E[] sanitizeValue(E[] in) {
+            return in;
+        }
+    }
+
+    static class HeaderSanitizer implements Sanitizer<String> {
+        @Override
+        public String sanitizeKey(String in) {
+            return RestFuUtils.sanitizeHeader(in);
+        }
+
+        @Override
+        public String[] sanitizeValue(String[] in) {
+            if (in == null) return null;
+            final String[] out = new String[in.length];
+            for (int i = 0, j = in.length; i < j; i++) {
+                out[i] = RestFuUtils.sanitizeHeader(in[i]);
+            }
+            return out;
+        }
+
+    }
+
+
 }

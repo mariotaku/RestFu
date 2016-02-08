@@ -16,7 +16,7 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import org.mariotaku.restfu.Utils;
+import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.ContentType;
 
 import java.io.ByteArrayInputStream;
@@ -87,6 +87,6 @@ public final class StringBody implements Body {
 
     @Override
     public void close() throws IOException {
-        Utils.closeSilently(is);
+        RestFuUtils.closeSilently(is);
     }
 }
