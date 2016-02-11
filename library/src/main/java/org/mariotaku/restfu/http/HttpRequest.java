@@ -34,6 +34,14 @@ public final class HttpRequest {
     private final Body body;
     private final Object tag;
 
+    public HttpRequest(String method, String url, MultiValueMap<String> headers, Body body, Object tag) {
+        this.method = method;
+        this.url = url;
+        this.headers = headers;
+        this.body = body;
+        this.tag = tag;
+    }
+
     public String getMethod() {
         return method;
     }
@@ -56,20 +64,22 @@ public final class HttpRequest {
 
     @Override
     public String toString() {
-        return "RestRequest{" +
+        return "HttpRequest{" +
                 "method='" + method + '\'' +
                 ", url='" + url + '\'' +
                 ", headers=" + headers +
                 ", body=" + body +
+                ", tag=" + tag +
                 '}';
     }
 
-    public HttpRequest(String method, String url, MultiValueMap<String> headers, Body body, Object tag) {
-        this.method = method;
-        this.url = url;
-        this.headers = headers;
-        this.body = body;
-        this.tag = tag;
+    /**
+     * Created by mariotaku on 15/5/25.
+     */
+    public interface Factory {
+        <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
+                                                 RestConverter.Factory<E> converterFactory) throws E,
+                RestConverter.ConvertException, IOException;
     }
 
     public static final class Builder {
@@ -112,7 +122,6 @@ public final class HttpRequest {
         }
     }
 
-
     public static class DefaultFactory implements Factory {
 
         @Override
@@ -128,14 +137,5 @@ public final class HttpRequest {
             }
             return new HttpRequest(requestInfo.getMethod(), url, headers, requestInfo.getBody(converterFactory), null);
         }
-    }
-
-    /**
-     * Created by mariotaku on 15/5/25.
-     */
-    public interface Factory {
-        <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
-                                                 RestConverter.Factory<E> converterFactory) throws E,
-                RestConverter.ConvertException, IOException;
     }
 }

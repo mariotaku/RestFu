@@ -53,4 +53,13 @@ public abstract class HttpResponse implements Closeable {
         return status >= 200 && status < 300;
     }
 
+    @Override
+    public String toString() {
+        return "HttpResponse{" +
+                "successful=" + isSuccessful() +
+                ", status=" + getStatus() +
+                ", headers=" + getHeaders() +
+                ", body=" + getBody() +
+                '}';
+    }
 }
