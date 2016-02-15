@@ -1,7 +1,7 @@
 import okhttp3.OkHttpClient;
 import org.mariotaku.restfu.RestAPIFactory;
 import org.mariotaku.restfu.http.Endpoint;
-import org.mariotaku.restfu.okhttp.OkHttpRestClient;
+import org.mariotaku.restfu.okhttp3.OkHttpRestClient;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;

@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-include ':library', ':okhttp', ':okhttp3', ':sample'
+include ':library', ':okhttp', ':okhttp3', ':urlconnection', ':sample'

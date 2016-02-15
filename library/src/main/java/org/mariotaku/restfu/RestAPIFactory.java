@@ -18,15 +18,11 @@ package org.mariotaku.restfu;
 
 import org.mariotaku.restfu.callback.ErrorCallback;
 import org.mariotaku.restfu.callback.RestCallback;
-import org.mariotaku.restfu.exception.RestException;
 import org.mariotaku.restfu.http.*;
 
 import java.io.IOException;
 import java.lang.reflect.*;
 
-/**
- * Created by mariotaku on 15/2/6.
- */
 public class RestAPIFactory<E extends Exception> {
 
     private Endpoint endpoint;
@@ -36,8 +32,7 @@ public class RestAPIFactory<E extends Exception> {
     private HttpRequest.Factory httpRequestFactory = new HttpRequest.DefaultFactory();
     private RestRequest.Factory<E> restRequestFactory = new RestRequest.DefaultFactory<>();
     private RestConverter.Factory<E> restConverterFactory;
-    @SuppressWarnings("unchecked")
-    private ExceptionFactory<E> exceptionFactory = new DefaultExceptionFactory();
+    private ExceptionFactory<E> exceptionFactory;
     private ValueMap constantPool;
 
     public RestAPIFactory() {
@@ -108,7 +103,7 @@ public class RestAPIFactory<E extends Exception> {
         private final RestConverter.Factory<E> converterFactory;
         private final RestRequest.Factory<E> requestInfoFactory;
         private final HttpRequest.Factory requestFactory;
-        private final ExceptionFactory exceptionFactory;
+        private final ExceptionFactory<E> exceptionFactory;
         private final ValueMap constantPoll;
         private final RestHttpClient restClient;
 
@@ -117,7 +112,7 @@ public class RestAPIFactory<E extends Exception> {
                                      RestConverter.Factory<E> converterFactory,
                                      RestRequest.Factory<E> restRequestFactory,
                                      HttpRequest.Factory httpRequestFactory,
-                                     ExceptionFactory exceptionFactory,
+                                     ExceptionFactory<E> exceptionFactory,
                                      ValueMap constantPoll) {
             this.endpoint = endpoint;
             this.authorization = authorization;
@@ -151,18 +146,26 @@ public class RestAPIFactory<E extends Exception> {
 
         @SuppressWarnings({"TryWithIdenticalCatches"})
         @Override
-        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Exception {
-            if (method.getDeclaringClass() == Object.class) {
-                return method.invoke(this, args);
-            } else if (method.getDeclaringClass() == RestClient.class) {
-                return method.invoke(this, args);
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws E {
+            try {
+                if (method.getDeclaringClass() == Object.class) {
+                    return method.invoke(this, args);
+                } else if (method.getDeclaringClass() == RestClient.class) {
+                    return method.invoke(this, args);
+                }
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
             final RestMethod<E> restMethod = RestMethod.get(method, args);
-            final RestRequest restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
-            final HttpRequest httpRequest = requestFactory.create(endpoint, restRequest, authorization, converterFactory);
+            RestRequest restRequest;
             HttpCall httpCall = null;
+            HttpRequest httpRequest = null;
             HttpResponse httpResponse = null;
             try {
+                restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
+                httpRequest = requestFactory.create(endpoint, restRequest, authorization, converterFactory);
                 httpCall = restClient.newCall(httpRequest);
                 httpResponse = httpCall.execute();
                 if (!httpResponse.isSuccessful()) {
@@ -174,12 +177,6 @@ public class RestAPIFactory<E extends Exception> {
                 return onError(e, httpRequest, httpResponse, args);
             } catch (RestConverter.ConvertException e) {
                 return onError(e, httpRequest, httpResponse, args);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
             } finally {
                 RestFuUtils.closeSilently(httpResponse);
                 RestFuUtils.closeSilently(httpCall);
@@ -187,8 +184,8 @@ public class RestAPIFactory<E extends Exception> {
         }
 
         private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
-                               final Object[] args) throws Exception {
-            final Exception exception = exceptionFactory.newException(cause, httpRequest, response);
+                               final Object[] args) throws E {
+            final E exception = exceptionFactory.newException(cause, httpRequest, response);
             if (args != null) {
                 for (Object arg : args) {
                     if (arg instanceof ErrorCallback) {
@@ -201,15 +198,4 @@ public class RestAPIFactory<E extends Exception> {
         }
     }
 
-    public static final class DefaultExceptionFactory implements ExceptionFactory {
-
-        @Override
-        public RestException newException(final Throwable cause, final HttpRequest request,
-                                          final HttpResponse response) {
-            final RestException e = new RestException(cause);
-            e.setRequest(request);
-            e.setResponse(response);
-            return e;
-        }
-    }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mariotaku.restfu.okhttp;
+package org.mariotaku.restfu.okhttp3;
 
 import okhttp3.*;
 import okio.BufferedSink;
@@ -42,7 +42,7 @@ public class OkHttpRestClient implements RestHttpClient {
     @Override
     public HttpCall newCall(final HttpRequest httpRequest) {
         final Request.Builder builder = new Request.Builder();
-        builder.method(httpRequest.getMethod(), RestToOkBody.wrap(httpRequest.getBody()));
+        builder.method(httpRequest.getMethod(), RestToOkRequestBody.wrap(httpRequest.getBody()));
         builder.url(httpRequest.getUrl());
         final MultiValueMap<String> headers = httpRequest.getHeaders();
         if (headers != null) {
@@ -67,42 +67,13 @@ public class OkHttpRestClient implements RestHttpClient {
         return client;
     }
 
-    private static class RestToOkBody extends RequestBody {
+    private static class OkToRestResponse extends HttpResponse {
+        private final Response response;
         private final Body body;
 
-        public RestToOkBody(Body body) {
-            this.body = body;
-        }
-
-        public static RequestBody wrap(Body body) {
-            if (body == null) return null;
-            return new RestToOkBody(body);
-        }
-
-        @Override
-        public MediaType contentType() {
-            final ContentType contentType = body.contentType();
-            if (contentType == null) return null;
-            return MediaType.parse(contentType.toHeader());
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-            body.writeTo(sink.outputStream());
-        }
-
-        @Override
-        public long contentLength() throws IOException {
-            return body.length();
-        }
-    }
-
-    private static class OkResponse extends HttpResponse {
-        private final Response response;
-        private Body body;
-
-        public OkResponse(Response response) {
+        public OkToRestResponse(Response response) {
             this.response = response;
+            this.body = new OkToRestResponseBody(response.body());
         }
 
         @Override
@@ -128,24 +99,20 @@ public class OkHttpRestClient implements RestHttpClient {
 
         @Override
         public Body getBody() {
-            if (body != null) return body;
-            return body = new OkResponseBody(response.body());
+            return body;
         }
 
         @Override
         public void close() throws IOException {
-            if (body != null) {
-                body.close();
-                body = null;
-            }
+            body.close();
         }
     }
 
-    private static class OkResponseBody implements Body {
+    private static class OkToRestResponseBody implements Body {
 
         private final ResponseBody body;
 
-        public OkResponseBody(ResponseBody body) {
+        public OkToRestResponseBody(ResponseBody body) {
             this.body = body;
         }
 
@@ -194,12 +161,12 @@ public class OkHttpRestClient implements RestHttpClient {
 
         @Override
         public HttpResponse execute() throws IOException {
-            return new OkResponse(call.execute());
+            return new OkToRestResponse(call.execute());
         }
 
         @Override
         public void enqueue(HttpCallback callback) {
-            call.enqueue(new OkCallback(callback));
+            call.enqueue(new RestToOkCallback(callback));
         }
 
         public void cancel() {
@@ -213,13 +180,44 @@ public class OkHttpRestClient implements RestHttpClient {
 
         @Override
         public void close() throws IOException {
+
         }
     }
 
-    private static class OkCallback implements Callback {
+    private static class RestToOkRequestBody extends RequestBody {
+        private final Body body;
+
+        public RestToOkRequestBody(Body body) {
+            this.body = body;
+        }
+
+        public static RequestBody wrap(Body body) {
+            if (body == null) return null;
+            return new RestToOkRequestBody(body);
+        }
+
+        @Override
+        public MediaType contentType() {
+            final ContentType contentType = body.contentType();
+            if (contentType == null) return null;
+            return MediaType.parse(contentType.toHeader());
+        }
+
+        @Override
+        public void writeTo(BufferedSink sink) throws IOException {
+            body.writeTo(sink.outputStream());
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return body.length();
+        }
+    }
+
+    private static class RestToOkCallback implements Callback {
         private final HttpCallback callback;
 
-        public OkCallback(HttpCallback callback) {
+        public RestToOkCallback(HttpCallback callback) {
             this.callback = callback;
         }
 
@@ -230,7 +228,7 @@ public class OkHttpRestClient implements RestHttpClient {
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            this.callback.response(new OkResponse(response));
+            this.callback.response(new OkToRestResponse(response));
         }
     }
 }
