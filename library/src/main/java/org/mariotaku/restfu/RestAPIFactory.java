@@ -164,6 +164,10 @@ public class RestAPIFactory<E extends Exception> {
             HttpRequest httpRequest = null;
             HttpResponse httpResponse = null;
             try {
+                // Get converter before network requests, https://github.com/TwidereProject/Twidere-Android/issues/378
+                // We can throw exceptions before network requests sent
+                final Type returnType = method.getGenericReturnType();
+                final RestConverter<HttpResponse, ?, E> converter = converterFactory.forResponse(returnType);
                 restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
                 httpRequest = requestFactory.create(endpoint, restRequest, authorization, converterFactory);
                 httpCall = restClient.newCall(httpRequest);
@@ -171,8 +175,7 @@ public class RestAPIFactory<E extends Exception> {
                 if (!httpResponse.isSuccessful()) {
                     return onError(null, httpRequest, httpResponse, args);
                 }
-                final Type returnType = method.getGenericReturnType();
-                return converterFactory.forResponse(returnType).convert(httpResponse);
+                return converter.convert(httpResponse);
             } catch (IOException e) {
                 return onError(e, httpRequest, httpResponse, args);
             } catch (RestConverter.ConvertException e) {

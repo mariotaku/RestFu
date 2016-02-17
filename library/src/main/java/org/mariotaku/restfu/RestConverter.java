@@ -32,14 +32,14 @@ public interface RestConverter<F, T, E extends Exception> {
 
     interface Factory<E extends Exception> {
 
-        RestConverter<HttpResponse, ?, E> forResponse(Type toType);
+        RestConverter<HttpResponse, ?, E> forResponse(Type toType) throws ConvertException;
 
-        RestConverter<?, Body, E> forRequest(Type fromType);
+        RestConverter<?, Body, E> forRequest(Type fromType) throws ConvertException;
     }
 
     abstract class SimpleFactory<E extends Exception> implements Factory<E> {
         @Override
-        public RestConverter<?, Body, E> forRequest(Type fromType) {
+        public RestConverter<?, Body, E> forRequest(Type fromType) throws ConvertException {
             if (!SimpleBody.supports(fromType)) throw new UnsupportedTypeException(fromType);
             return new SimpleBodyConverter<>(fromType);
         }
