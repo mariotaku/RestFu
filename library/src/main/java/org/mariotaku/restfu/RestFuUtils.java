@@ -148,7 +148,7 @@ public class RestFuUtils {
 
     public static String toString(Object value, char delimiter) {
         final Class<?> valueClass = value.getClass();
-        if (valueClass.isArray()) {
+        if (valueClass.isArray() && delimiter != '\0') {
             final StringBuilder sb = new StringBuilder();
             for (int i = 0, j = Array.getLength(value); i < j; i++) {
                 if (i != 0) {

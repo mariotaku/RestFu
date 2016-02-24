@@ -215,7 +215,7 @@ public final class RestMethod<E extends Exception> {
             @Override
             public String[] convert(Object from, char arrayDelimiter) throws RestConverter.ConvertException, IOException {
                 if (from == null) return new String[]{null};
-                return new String[]{from.toString()};
+                return new String[]{RestFuUtils.toString(from, arrayDelimiter)};
             }
         };
         final SimpleSanitizer<String> sanitizer = new SimpleSanitizer<>();
