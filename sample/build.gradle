@@ -21,6 +21,6 @@ repositories {
 
 dependencies {
     compile project(':library')
-    compile project(':okhttp3')
+    compile project(':urlconnection')
     compile 'com.google.code.gson:gson:2.5'
 }

@@ -27,9 +27,10 @@ public class URLConnectionRestClient implements RestHttpClient {
         call.enqueue(callback);
     }
 
-    class URLConnectionCall implements HttpCall {
+    static class URLConnectionCall implements HttpCall {
 
         private final HttpRequest request;
+        private URLConnectionResponse resp;
 
         public URLConnectionCall(HttpRequest request) {
             this.request = request;
@@ -37,14 +38,15 @@ public class URLConnectionRestClient implements RestHttpClient {
 
         @Override
         public HttpResponse execute() throws IOException {
-            URL url = new URL(request.getUrl());
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            if (resp != null) throw new IllegalStateException("A call can be executed only once");
+            final URL url = new URL(request.getUrl());
+            final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(request.getMethod());
             for (Pair<String, String> pair : request.getHeaders().toList()) {
                 conn.addRequestProperty(pair.first, pair.second);
             }
             conn.getResponseCode();
-            return new URLConnectionResponse(conn);
+            return resp = new URLConnectionResponse(conn);
         }
 
         @Override
@@ -54,7 +56,6 @@ public class URLConnectionRestClient implements RestHttpClient {
 
         @Override
         public void cancel() {
-
         }
 
         @Override
@@ -64,11 +65,14 @@ public class URLConnectionRestClient implements RestHttpClient {
 
         @Override
         public void close() throws IOException {
-
+            if (resp != null) {
+                resp.close();
+            }
         }
 
-        private class URLConnectionResponse extends HttpResponse {
+        static class URLConnectionResponse extends HttpResponse {
             private final HttpURLConnection conn;
+            private URLConnectionBody body;
 
             public URLConnectionResponse(HttpURLConnection conn) {
                 this.conn = conn;
@@ -97,16 +101,20 @@ public class URLConnectionRestClient implements RestHttpClient {
 
             @Override
             public Body getBody() {
-                return new URLConnectionBody(conn);
+                if (body != null) return body;
+                return body = new URLConnectionBody(conn);
             }
 
             @Override
             public void close() throws IOException {
-                conn.disconnect();
+                if (body != null) {
+                    body.close();
+                }
             }
 
-            private class URLConnectionBody implements Body {
+            static class URLConnectionBody implements Body {
                 private final HttpURLConnection conn;
+                private InputStream stream;
 
                 public URLConnectionBody(HttpURLConnection conn) {
                     this.conn = conn;
@@ -134,16 +142,17 @@ public class URLConnectionRestClient implements RestHttpClient {
 
                 @Override
                 public InputStream stream() throws IOException {
-                    InputStream is = conn.getErrorStream();
-                    if (is == null) {
-                        is = conn.getInputStream();
+                    if (stream != null) return stream;
+                    stream = conn.getErrorStream();
+                    if (stream == null) {
+                        stream = conn.getInputStream();
                     }
-                    return is;
+                    return stream;
                 }
 
                 @Override
                 public void close() throws IOException {
-                    conn.disconnect();
+                    stream.close();
                 }
             }
         }
