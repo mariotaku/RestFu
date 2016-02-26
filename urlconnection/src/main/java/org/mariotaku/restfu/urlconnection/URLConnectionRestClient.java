@@ -45,6 +45,11 @@ public class URLConnectionRestClient implements RestHttpClient {
             for (Pair<String, String> pair : request.getHeaders().toList()) {
                 conn.addRequestProperty(pair.first, pair.second);
             }
+            final Body body = request.getBody();
+            if (body != null) {
+                conn.setDoOutput(true);
+                body.writeTo(conn.getOutputStream());
+            }
             conn.getResponseCode();
             return resp = new URLConnectionResponse(conn);
         }
