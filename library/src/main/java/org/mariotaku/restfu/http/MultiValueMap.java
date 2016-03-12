@@ -77,4 +77,8 @@ public final class MultiValueMap<V> {
     public boolean isEmpty() {
         return map.isEmpty();
     }
+
+    public Set<String> keySet() {
+        return map.keySet();
+    }
 }

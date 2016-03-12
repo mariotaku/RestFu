@@ -293,8 +293,8 @@ public final class RestMethod<E extends Exception> {
             @Override
             public void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E {
                 final String key = item.key(), value = item.value(), valueKey = item.valueKey();
-                if (valueKey.length() > 0 && valuesPool != null) {
-                    if (valuesPool.has(valueKey)) {
+                if (valueKey.length() > 0) {
+                    if (valuesPool != null && valuesPool.has(valueKey)) {
                         final String sanitizedKey = sanitizer.sanitizeKey(key);
                         final T[] keyValue = converter.convert(valuesPool.get(valueKey), item.arrayDelimiter());
                         target.addAll(sanitizedKey, sanitizer.sanitizeValue(keyValue));
