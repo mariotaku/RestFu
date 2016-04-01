@@ -24,7 +24,7 @@ import org.mariotaku.restfu.http.ContentType;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Random;
 
 /**
  * Created by mariotaku on 15/5/5.
@@ -51,7 +51,10 @@ public class MultipartBody implements Body {
     public MultipartBody(List<Pair<String, Body>> parts) {
         this.parts = parts;
         this.contentType = ContentType.parse("multipart/form-data");
-        final String boundary = RestFuUtils.bytesToHex(UUID.randomUUID().toString().getBytes());
+        final byte[] bytes = new byte[32];
+        final Random random = new Random();
+        random.nextBytes(bytes);
+        final String boundary = RestFuUtils.bytesToHex(bytes);
         contentType.addParameter("boundary", boundary);
         boundaryBytes = boundary.getBytes();
     }

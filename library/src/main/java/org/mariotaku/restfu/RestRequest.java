@@ -71,6 +71,7 @@ public final class RestRequest {
     private String inferBodyType() {
         if (file != null) return BodyType.RAW;
         for (Pair<String, Body> pair : getParams().toList()) {
+            if (pair.second == null) continue;
             if (!(pair.second instanceof StringBody)) return BodyType.MULTIPART;
         }
         return BodyType.FORM;

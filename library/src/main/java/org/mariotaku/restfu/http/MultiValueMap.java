@@ -71,7 +71,11 @@ public final class MultiValueMap<V> {
             list = new ArrayList<>();
             map.put(key, list);
         }
-        Collections.addAll(list, values);
+        if (values != null) {
+            Collections.addAll(list, values);
+        } else {
+            list.add(null);
+        }
     }
 
     public boolean isEmpty() {

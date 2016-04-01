@@ -1,6 +1,6 @@
 allprojects {
     group 'com.github.mariotaku.RestFu'
-    version = '0.9.25'
+    version = '0.9.26'
 }
 
 subprojects {
