@@ -65,11 +65,13 @@ public final class StringBody implements Body {
     }
 
     private byte[] getBytes() {
-        final Charset charset = contentType.getCharset();
-        if (charset == null) {
-            return value.getBytes();
+        if (contentType != null) {
+            final Charset charset = contentType.getCharset();
+            if (charset != null) {
+                return value.getBytes(charset);
+            }
         }
-        return value.getBytes(charset);
+        return value.getBytes();
     }
 
     @Override

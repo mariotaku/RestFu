@@ -113,11 +113,12 @@ public class MultipartBody implements Body {
             totalLength += write(os, DASHDASH);
             totalLength += write(os, boundaryBytes);
             totalLength += write(os, CRLF);
-            final ContentType contentDisposition = new ContentType("form-data").parameter("name", part.first);
+            final ContentType contentDisposition = new ContentType("form-data").parameter("name",
+                    quoteString(part.first));
             final ContentType contentType = part.second.contentType();
             final long contentLength = part.second.length();
             if (part.second instanceof FileBody) {
-                contentDisposition.addParameter("filename", ((FileBody) part.second).fileName());
+                contentDisposition.addParameter("filename", quoteString(((FileBody) part.second).fileName()));
             }
             totalLength += write(os, CONTENT_DISPOSITION);
             totalLength += write(os, COLONSPACE);
@@ -158,6 +159,47 @@ public class MultipartBody implements Body {
     private long write(final OutputStream os, final byte[] bytes) throws IOException {
         os.write(bytes);
         return bytes.length;
+    }
+
+    public static String quoteString(String string) {
+        return appendQuotedString(new StringBuilder(), string).toString();
+    }
+
+    /**
+     * Appends a quoted-string to a StringBuilder.
+     * <br>
+     * RFC 2388 is rather vague about how one should escape special characters in form-data
+     * parameters, and as it turns out Firefox and Chrome actually do rather different things, and
+     * both say in their comments that they're not really sure what the right approach is. We go with
+     * Chrome's behavior (which also experimentally seems to match what IE does), but if you actually
+     * want to have a good chance of things working, please avoid double-quotes, newlines, percent
+     * signs, and the like in your field names.
+     *
+     * @param target StringBuffer that will be append to
+     * @param string String for quote
+     * @return StringBuffer that passed into this method
+     */
+    public static StringBuilder appendQuotedString(StringBuilder target, String string) {
+        target.append('"');
+        for (int i = 0, len = string.length(); i < len; i++) {
+            char ch = string.charAt(i);
+            switch (ch) {
+                case '\n':
+                    target.append("%0A");
+                    break;
+                case '\r':
+                    target.append("%0D");
+                    break;
+                case '"':
+                    target.append("%22");
+                    break;
+                default:
+                    target.append(ch);
+                    break;
+            }
+        }
+        target.append('"');
+        return target;
     }
 
 
