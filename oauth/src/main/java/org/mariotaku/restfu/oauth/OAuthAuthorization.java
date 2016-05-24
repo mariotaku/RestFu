@@ -93,7 +93,12 @@ public class OAuthAuthorization implements Authorization {
         }
         if (params != null && BodyType.FORM.equals(bodyType)) {
             for (Pair<String, Body> form : params.toList()) {
-                encodeParams.add(encodeParameter(form.first, ((StringBody) form.second).value()));
+                final StringBody second = (StringBody) form.second;
+                if (second != null) {
+                    encodeParams.add(encodeParameter(form.first, second.value()));
+                } else {
+                    encodeParams.add(encodeParameter(form.first, null));
+                }
             }
         }
         Collections.sort(encodeParams);
@@ -194,7 +199,13 @@ public class OAuthAuthorization implements Authorization {
     }
 
     private String encodeParameter(String key, String value) {
-        return encode(key) + '=' + encode(value);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(encode(key));
+        if (value != null) {
+            sb.append('=');
+            sb.append(encode(value));
+        }
+        return sb.toString();
     }
 
     private static String encode(final String value) {

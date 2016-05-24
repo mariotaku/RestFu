@@ -16,7 +16,7 @@
 
 package org.mariotaku.restfu.http.mime;
 
-import org.mariotaku.restfu.RestFuUtils;
+import org.mariotaku.commons.io.StreamUtils;
 import org.mariotaku.restfu.http.ContentType;
 
 import java.io.*;
@@ -57,7 +57,8 @@ public class FileBody implements Body {
 
     @Override
     public long writeTo(OutputStream os) throws IOException {
-        return RestFuUtils.copyStream(stream(), os);
+        final LengthLimitCopyListener listener = new LengthLimitCopyListener(length);
+        return StreamUtils.copy(stream(), os, listener, listener);
     }
 
 

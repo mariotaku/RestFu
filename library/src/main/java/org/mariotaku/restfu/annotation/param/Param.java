@@ -30,4 +30,6 @@ public @interface Param {
     String[] value() default {};
 
     char arrayDelimiter() default '\0';
+
+    boolean ignoreOnNull() default true;
 }

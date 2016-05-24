@@ -20,7 +20,9 @@ import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.StringBody;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -208,22 +210,6 @@ public class RestFuUtils {
             throw new ArrayIndexOutOfBoundsException("length=" + arrayLength + "; regionStart="
                     + offset + "; regionLength=" + count);
         }
-    }
-
-    public static boolean isEmpty(CharSequence text) {
-        return text == null || text.length() == 0;
-    }
-
-
-    public static long copyStream(InputStream is, OutputStream os) throws IOException {
-        byte[] buf = new byte[8192];
-        int len;
-        long total = 0;
-        while ((len = is.read(buf)) != -1) {
-            os.write(buf, 0, len);
-            total += len;
-        }
-        return total;
     }
 
     public static void append(StringBuilder sb, MultiValueMap<String> queries, Charset charset) {

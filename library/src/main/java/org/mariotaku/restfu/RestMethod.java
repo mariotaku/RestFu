@@ -314,11 +314,14 @@ public final class RestMethod<E extends Exception> {
         if (list == null) return;
         for (Pair<?, Object> pair : list) {
             if (pair.first instanceof Header) {
-                consumer.consume(((Header) pair.first).value(), ((Header) pair.first).arrayDelimiter(), pair.second);
+                final Header h = (Header) pair.first;
+                consumer.consume(h.value(), h.arrayDelimiter(), h.ignoreOnNull(), pair.second);
             } else if (pair.first instanceof Param) {
-                consumer.consume(((Param) pair.first).value(), ((Param) pair.first).arrayDelimiter(), pair.second);
+                final Param p = (Param) pair.first;
+                consumer.consume(p.value(), p.arrayDelimiter(), p.ignoreOnNull(), pair.second);
             } else if (pair.first instanceof Query) {
-                consumer.consume(((Query) pair.first).value(), ((Query) pair.first).arrayDelimiter(), pair.second);
+                final Query q = (Query) pair.first;
+                consumer.consume(q.value(), q.arrayDelimiter(), q.ignoreOnNull(), pair.second);
             }
         }
 
@@ -349,8 +352,9 @@ public final class RestMethod<E extends Exception> {
             throws RestConverter.ConvertException, IOException, E {
         consumeArguments(list, new ArgumentIterateConsumer<E>() {
             @Override
-            public void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException,
+            public void consume(String[] names, char arrayDelimiter, boolean ignoreOnNull, Object object) throws RestConverter.ConvertException,
                     IOException, E {
+                if (ignoreOnNull && object == null) return;
                 addToMap(names, object, map, arrayDelimiter, converter, sanitizer);
             }
         });
@@ -402,7 +406,7 @@ public final class RestMethod<E extends Exception> {
     }
 
     interface ArgumentIterateConsumer<E extends Exception> {
-        void consume(String[] names, char arrayDelimiter, Object object) throws RestConverter.ConvertException, IOException, E;
+        void consume(String[] names, char arrayDelimiter, boolean ignoreOnNull, Object object) throws RestConverter.ConvertException, IOException, E;
     }
 
     interface ConstantIterateConsumer<E extends Exception> {

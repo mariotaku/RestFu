@@ -88,7 +88,12 @@ public class FormBody implements Body {
     public static Body wrap(MultiValueMap<Body> params) {
         final MultiValueMap<String> forms = new MultiValueMap<>();
         for (Pair<String, Body> pair : params.toList()) {
-            forms.add(pair.first, ((StringBody) pair.second).value());
+            final StringBody second = (StringBody) pair.second;
+            if (second != null) {
+                forms.add(pair.first, second.value());
+            } else {
+                forms.add(pair.first, null);
+            }
         }
         return new FormBody(forms);
     }

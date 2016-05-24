@@ -30,4 +30,6 @@ public @interface Query {
     String[] value() default {};
 
     char arrayDelimiter() default '\0';
+
+    boolean ignoreOnNull() default true;
 }

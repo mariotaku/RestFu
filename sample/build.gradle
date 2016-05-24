@@ -15,10 +15,6 @@
  */
 apply plugin: 'java'
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     compile project(':library')
     compile project(':urlconnection')

@@ -1,7 +1,7 @@
 package org.mariotaku.restfu.urlconnection;
 
+import org.mariotaku.commons.io.StreamUtils;
 import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
 
@@ -142,7 +142,7 @@ public class URLConnectionRestClient implements RestHttpClient {
 
                 @Override
                 public long writeTo(OutputStream os) throws IOException {
-                    return RestFuUtils.copyStream(stream(), os);
+                    return StreamUtils.copy(stream(), os, null, null);
                 }
 
                 @Override

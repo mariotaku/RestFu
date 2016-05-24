@@ -1,6 +1,12 @@
 allprojects {
     group 'com.github.mariotaku.RestFu'
-    version = '0.9.28'
+    version = '0.9.29-SNAPSHOT'
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url 'https://jitpack.io/' }
+    }
 }
 
 subprojects {

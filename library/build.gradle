@@ -16,10 +16,7 @@
 
 apply plugin: 'java'
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
+    compile 'com.github.mariotaku.CommonsLibrary:io:0.9.8'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
