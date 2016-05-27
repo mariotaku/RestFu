@@ -12,4 +12,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Headers {
     KeyValue[] value() default {};
+
+    /**
+     * Library will trying to load {@link Headers#value()} from template class
+     */
+    Class<?> template() default void.class;
 }

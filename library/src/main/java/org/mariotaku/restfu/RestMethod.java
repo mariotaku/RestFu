@@ -332,11 +332,38 @@ public final class RestMethod<E extends Exception> {
         if (annotation == null) return;
         KeyValue[] items;
         if (annotation instanceof Headers) {
-            items = ((Headers) annotation).value();
+            Headers h = (Headers) annotation;
+            if (h.template() != void.class) {
+                h = h.template().getAnnotation(Headers.class);
+                if (h == null) {
+                    throw new UnsupportedOperationException("Template class must be annotated");
+                } else if (h.template() != void.class) {
+                    throw new UnsupportedOperationException("Template class can't use template reference");
+                }
+            }
+            items = h.value();
         } else if (annotation instanceof Queries) {
-            items = ((Queries) annotation).value();
+            Queries q = (Queries) annotation;
+            if (q.template() != void.class) {
+                q = q.template().getAnnotation(Queries.class);
+                if (q == null) {
+                    throw new UnsupportedOperationException("Template class must be annotated");
+                } else if (q.template() != void.class) {
+                    throw new UnsupportedOperationException("Template class can't use template reference");
+                }
+            }
+            items = q.value();
         } else if (annotation instanceof Params) {
-            items = ((Params) annotation).value();
+            Params p = (Params) annotation;
+            if (p.template() != void.class) {
+                p = p.template().getAnnotation(Params.class);
+                if (p == null) {
+                    throw new UnsupportedOperationException("Template class must be annotated");
+                } else if (p.template() != void.class) {
+                    throw new UnsupportedOperationException("Template class can't use template reference");
+                }
+            }
+            items = p.value();
         } else {
             throw new UnsupportedOperationException(annotation.getClass().toString());
         }
