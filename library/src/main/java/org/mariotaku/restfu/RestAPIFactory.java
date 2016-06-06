@@ -33,6 +33,7 @@ public class RestAPIFactory<E extends Exception> {
     private RestRequest.Factory<E> restRequestFactory = new RestRequest.DefaultFactory<>();
     private RestConverter.Factory<E> restConverterFactory;
     private ExceptionFactory<E> exceptionFactory;
+    private ResultDispatcher resultDispatcher = new ResultDispatcher.Default();
     private ValueMap constantPool;
 
     public RestAPIFactory() {
@@ -71,6 +72,10 @@ public class RestAPIFactory<E extends Exception> {
         this.restRequestFactory = restRequestFactory;
     }
 
+    public void setResultDispatcher(ResultDispatcher resultDispatcher) {
+        this.resultDispatcher = resultDispatcher;
+    }
+
     public static RestClient getRestClient(Object obj) {
         final InvocationHandler handler = Proxy.getInvocationHandler(obj);
         if (!(handler instanceof RestClient)) throw new IllegalArgumentException();
@@ -87,9 +92,10 @@ public class RestAPIFactory<E extends Exception> {
         checkNotNull(restRequestFactory, "RestRequest.Factory");
         checkNotNull(httpRequestFactory, "HttpRequest.Factory");
         checkNotNull(exceptionFactory, "ExceptionFactory");
+        checkNotNull(resultDispatcher, "ResultDispatcher");
         return (T) Proxy.newProxyInstance(classLoader, interfaces, new RestInvocationHandler(endpoint,
                 authorization, httpClient, restConverterFactory, restRequestFactory, httpRequestFactory,
-                exceptionFactory, constantPool));
+                exceptionFactory, constantPool, resultDispatcher));
     }
 
     private static void checkNotNull(Object object, String name) {
@@ -106,6 +112,7 @@ public class RestAPIFactory<E extends Exception> {
         private final ExceptionFactory<E> exceptionFactory;
         private final ValueMap constantPoll;
         private final RestHttpClient restClient;
+        private final ResultDispatcher resultDispatcher;
 
         public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
                                      RestHttpClient restClient,
@@ -113,7 +120,7 @@ public class RestAPIFactory<E extends Exception> {
                                      RestRequest.Factory<E> restRequestFactory,
                                      HttpRequest.Factory httpRequestFactory,
                                      ExceptionFactory<E> exceptionFactory,
-                                     ValueMap constantPoll) {
+                                     ValueMap constantPoll, ResultDispatcher resultDispatcher) {
             this.endpoint = endpoint;
             this.authorization = authorization;
             this.restClient = restClient;
@@ -122,11 +129,7 @@ public class RestAPIFactory<E extends Exception> {
             this.requestFactory = httpRequestFactory;
             this.exceptionFactory = exceptionFactory;
             this.constantPoll = constantPoll;
-        }
-
-        private static <T> void invokeCallback(final RestCallback<?> callback, final T result) {
-            //noinspection unchecked
-            ((RestCallback<T>) callback).result(result);
+            this.resultDispatcher = resultDispatcher;
         }
 
         @Override
@@ -175,7 +178,7 @@ public class RestAPIFactory<E extends Exception> {
                 if (!httpResponse.isSuccessful()) {
                     return onError(null, httpRequest, httpResponse, args);
                 }
-                return converter.convert(httpResponse);
+                return onResult(converter.convert(httpResponse), args);
             } catch (IOException e) {
                 return onError(e, httpRequest, httpResponse, args);
             } catch (RestConverter.ConvertException e) {
@@ -186,13 +189,27 @@ public class RestAPIFactory<E extends Exception> {
             }
         }
 
+        private <T> Object onResult(T converted, Object[] args) {
+            if (args != null) {
+                for (Object arg : args) {
+                    if (arg instanceof RestCallback) {
+                        //noinspection unchecked
+                        resultDispatcher.dispatchResult((RestCallback<T>) arg, converted);
+                        return null;
+                    }
+                }
+            }
+            return converted;
+        }
+
         private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
                                final Object[] args) throws E {
             final E exception = exceptionFactory.newException(cause, httpRequest, response);
             if (args != null) {
                 for (Object arg : args) {
                     if (arg instanceof ErrorCallback) {
-                        ((ErrorCallback) arg).error(exception);
+                        //noinspection unchecked
+                        resultDispatcher.dispatchException((ErrorCallback<E>) arg, exception);
                         return null;
                     }
                 }

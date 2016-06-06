@@ -20,7 +20,7 @@ package org.mariotaku.restfu.callback;
 /**
  * Created by mariotaku on 15/2/7.
  */
-public interface ErrorCallback {
+public interface ErrorCallback<E extends Exception> {
 
-    void error(Throwable t);
+    void error(E exception);
 }
