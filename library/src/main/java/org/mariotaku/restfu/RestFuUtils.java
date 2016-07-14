@@ -19,13 +19,13 @@ package org.mariotaku.restfu;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.StringBody;
+import org.mariotaku.restfu.http.mime.UrlSerialization;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,44 +65,6 @@ public class RestFuUtils {
             c.close();
         } catch (IOException ignore) {
         }
-    }
-
-    /**
-     * @param value    string to be encoded
-     * @param encoding URL encoding
-     * @return encoded string
-     * @see <a href="http://wiki.oauth.net/TestCases">OAuth / TestCases</a>
-     * @see <a
-     * href="http://groups.google.com/group/oauth/browse_thread/thread/a8398d0521f4ae3d/9d79b698ab217df2?hl=en&lnk=gst&q=space+encoding#9d79b698ab217df2">Space
-     * encoding - OAuth | Google Groups</a>
-     * @see <a href="http://tools.ietf.org/html/rfc3986#section-2.1">RFC 3986 -
-     * Uniform Resource Identifier (URI): Generic Syntax - 2.1.
-     * Percent-Encoding</a>
-     */
-    public static String encode(final String value, String encoding) {
-        String encoded;
-        try {
-            encoded = URLEncoder.encode(value, encoding);
-        } catch (final UnsupportedEncodingException ignore) {
-            return null;
-        }
-        final StringBuilder buf = new StringBuilder(encoded.length());
-        char focus;
-        for (int i = 0; i < encoded.length(); i++) {
-            focus = encoded.charAt(i);
-            if (focus == '*') {
-                buf.append("%2A");
-            } else if (focus == '+') {
-                buf.append("%20");
-            } else if (focus == '%' && i + 1 < encoded.length() && encoded.charAt(i + 1) == '7'
-                    && encoded.charAt(i + 2) == 'E') {
-                buf.append('~');
-                i += 2;
-            } else {
-                buf.append(focus);
-            }
-        }
-        return buf.toString();
     }
 
     public static void parseQuery(final String queryString, final String encoding, final KeyValueConsumer consumer) {
@@ -219,9 +181,9 @@ public class RestFuUtils {
                 sb.append('&');
             }
             final Pair<String, String> form = list.get(i);
-            sb.append(encode(form.first, charset.name()));
+            UrlSerialization.QUERY.serialize(form.first, charset, sb);
             sb.append('=');
-            sb.append(encode(form.second, charset.name()));
+            UrlSerialization.QUERY.serialize(form.second, charset, sb);
         }
     }
 

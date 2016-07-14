@@ -21,6 +21,7 @@ import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.exception.MethodNotImplementedException;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.UrlSerialization;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -256,12 +257,13 @@ public final class RestMethod<E extends Exception> {
     }
 
     private String findPathReplacement(String key) {
+        final Charset charset = Charset.forName("UTF-8");
         for (Pair<Path, Object> entry : paths) {
             if (key.equals(entry.first.value())) {
                 if (entry.first.encoded()) {
                     return String.valueOf(entry.second);
                 } else {
-                    return RestFuUtils.encode(String.valueOf(entry.second), "UTF-8");
+                    return UrlSerialization.PATH.serialize(String.valueOf(entry.second), charset);
                 }
             }
         }

@@ -20,7 +20,6 @@
 package org.mariotaku.restfu.oauth;
 
 import org.mariotaku.restfu.Pair;
-import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.http.Authorization;
 import org.mariotaku.restfu.http.BodyType;
@@ -28,10 +27,12 @@ import org.mariotaku.restfu.http.Endpoint;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.StringBody;
+import org.mariotaku.restfu.http.mime.UrlSerialization;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -42,7 +43,38 @@ import java.util.*;
  */
 public class OAuthAuthorization implements Authorization {
 
+    private static final UrlSerialization OAUTH_ENCODING = new UrlSerialization() {
+        final BitSet allowedSet;
+
+        {
+            allowedSet = new BitSet(0xFF);
+            allowedSet.set('-', true);
+            allowedSet.set('.', true);
+            allowedSet.set('_', true);
+            allowedSet.set('~', true);
+            for (int i = '0'; i <= '9'; i++) {
+                allowedSet.set(i, true);
+            }
+            for (int i = 'A'; i <= 'Z'; i++) {
+                allowedSet.set(i, true);
+            }
+            for (int i = 'a'; i <= 'z'; i++) {
+                allowedSet.set(i, true);
+            }
+        }
+
+        @Override
+        protected void appendEscape(int codePoint, Charset charset, StringBuilder target) {
+            if (codePoint <= 0xFF && !allowedSet.get(codePoint)) {
+                percentEncode(codePoint, charset, target);
+            } else {
+                target.appendCodePoint(codePoint);
+            }
+        }
+    };
+
     private static final String DEFAULT_ENCODING = "UTF-8";
+    private static final Charset DEFAULT_CHARSET = Charset.forName(DEFAULT_ENCODING);
     private static final String OAUTH_SIGNATURE_METHOD = "HMAC-SHA1";
     private static final String OAUTH_VERSION = "1.0";
     private final String consumerKey, consumerSecret;
@@ -109,19 +141,24 @@ public class OAuthAuthorization implements Authorization {
             }
             paramBuilder.append(encodeParams.get(i));
         }
-        final String signingKey;
+        final StringBuilder signingKey = new StringBuilder();
+        encode(consumerSecret, signingKey);
+        signingKey.append('&');
         if (oauthTokenSecret != null) {
-            signingKey = encode(consumerSecret) + '&' + encode(oauthTokenSecret);
-        } else {
-            signingKey = encode(consumerSecret) + '&';
+            encode(oauthTokenSecret, signingKey);
         }
         try {
             final Mac mac = Mac.getInstance("HmacSHA1");
-            SecretKeySpec secret = new SecretKeySpec(signingKey.getBytes(), mac.getAlgorithm());
+            SecretKeySpec secret = new SecretKeySpec(signingKey.toString().getBytes(), mac.getAlgorithm());
             mac.init(secret);
             String urlNoQuery = url.indexOf('?') != -1 ? url.substring(0, url.indexOf('?')) : url;
-            final String baseString = encode(method) + '&' + encode(urlNoQuery) + '&' + encode(paramBuilder.toString());
-            final byte[] signature = mac.doFinal(baseString.getBytes(DEFAULT_ENCODING));
+            final StringBuilder baseString = new StringBuilder();
+            encode(method, baseString);
+            baseString.append('&');
+            encode(urlNoQuery, baseString);
+            baseString.append('&');
+            encode(paramBuilder.toString(), baseString);
+            final byte[] signature = mac.doFinal(baseString.toString().getBytes(DEFAULT_ENCODING));
             return Base64.encodeNoWrap(signature);
         } catch (NoSuchAlgorithmException e) {
             throw new UnsupportedOperationException(e);
@@ -200,16 +237,20 @@ public class OAuthAuthorization implements Authorization {
 
     private String encodeParameter(String key, String value) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(encode(key));
+        encode(key, sb);
         if (value != null) {
             sb.append('=');
-            sb.append(encode(value));
+            encode(value, sb);
         }
         return sb.toString();
     }
 
     private static String encode(final String value) {
-        return RestFuUtils.encode(value, DEFAULT_ENCODING);
+        return OAUTH_ENCODING.serialize(value, DEFAULT_CHARSET);
+    }
+
+    private static void encode(final String value, final StringBuilder sb) {
+        OAUTH_ENCODING.serialize(value, DEFAULT_CHARSET, sb);
     }
 
     private static final char[] VALID_NONCE_CHARACTERS = {'0', '1', '2', '3', '4', '5', '6', '7',
