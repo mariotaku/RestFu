@@ -65,10 +65,10 @@ public class OAuthAuthorization implements Authorization {
 
         @Override
         protected void appendEscape(int codePoint, Charset charset, StringBuilder target) {
-            if (codePoint <= 0xFF && !allowedSet.get(codePoint)) {
-                percentEncode(codePoint, charset, target);
-            } else {
+            if (codePoint <= 0xFF && allowedSet.get(codePoint)) {
                 target.appendCodePoint(codePoint);
+            } else {
+                percentEncode(codePoint, charset, target);
             }
         }
     };
@@ -101,70 +101,6 @@ public class OAuthAuthorization implements Authorization {
 
     public OAuthToken getOauthToken() {
         return oauthToken;
-    }
-
-    private String generateOAuthSignature(String method, String url,
-                                          String oauthNonce, long timestamp,
-                                          String oauthToken, String oauthTokenSecret,
-                                          MultiValueMap<String> queries,
-                                          MultiValueMap<Body> params,
-                                          String bodyType) {
-        final List<String> encodeParams = new ArrayList<>();
-        encodeParams.add(encodeParameter("oauth_consumer_key", consumerKey));
-        encodeParams.add(encodeParameter("oauth_nonce", oauthNonce));
-        encodeParams.add(encodeParameter("oauth_signature_method", OAUTH_SIGNATURE_METHOD));
-        encodeParams.add(encodeParameter("oauth_timestamp", String.valueOf(timestamp)));
-        encodeParams.add(encodeParameter("oauth_version", OAUTH_VERSION));
-        if (oauthToken != null) {
-            encodeParams.add(encodeParameter("oauth_token", oauthToken));
-        }
-        if (queries != null) {
-            for (Pair<String, String> query : queries.toList()) {
-                encodeParams.add(encodeParameter(query.first, query.second));
-            }
-        }
-        if (params != null && BodyType.FORM.equals(bodyType)) {
-            for (Pair<String, Body> form : params.toList()) {
-                final StringBody second = (StringBody) form.second;
-                if (second != null) {
-                    encodeParams.add(encodeParameter(form.first, second.value()));
-                } else {
-                    encodeParams.add(encodeParameter(form.first, null));
-                }
-            }
-        }
-        Collections.sort(encodeParams);
-        final StringBuilder paramBuilder = new StringBuilder();
-        for (int i = 0, j = encodeParams.size(); i < j; i++) {
-            if (i != 0) {
-                paramBuilder.append('&');
-            }
-            paramBuilder.append(encodeParams.get(i));
-        }
-        final StringBuilder signingKey = new StringBuilder();
-        encode(consumerSecret, signingKey);
-        signingKey.append('&');
-        if (oauthTokenSecret != null) {
-            encode(oauthTokenSecret, signingKey);
-        }
-        try {
-            final Mac mac = Mac.getInstance("HmacSHA1");
-            SecretKeySpec secret = new SecretKeySpec(signingKey.toString().getBytes(), mac.getAlgorithm());
-            mac.init(secret);
-            String urlNoQuery = url.indexOf('?') != -1 ? url.substring(0, url.indexOf('?')) : url;
-            final StringBuilder baseString = new StringBuilder();
-            encode(method, baseString);
-            baseString.append('&');
-            encode(urlNoQuery, baseString);
-            baseString.append('&');
-            encode(paramBuilder.toString(), baseString);
-            final byte[] signature = mac.doFinal(baseString.toString().getBytes(DEFAULT_ENCODING));
-            return Base64.encodeNoWrap(signature);
-        } catch (NoSuchAlgorithmException e) {
-            throw new UnsupportedOperationException(e);
-        } catch (InvalidKeyException | UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-        }
     }
 
     @Override
@@ -202,11 +138,80 @@ public class OAuthAuthorization implements Authorization {
         return headerBuilder.toString();
     }
 
-    public List<Pair<String, String>> generateOAuthParams(String oauthToken,
-                                                          String oauthTokenSecret, String method,
-                                                          String url, MultiValueMap<String> queries,
-                                                          MultiValueMap<Body> params,
-                                                          String bodyType) {
+    @Override
+    public boolean hasAuthorization() {
+        return true;
+    }
+
+    private String generateOAuthSignature(String method, String url,
+                                          String oauthNonce, long timestamp,
+                                          String oauthToken, String oauthTokenSecret,
+                                          MultiValueMap<String> queries,
+                                          MultiValueMap<Body> params,
+                                          String bodyType) {
+        final List<String> encodeParams = new ArrayList<>();
+        encodeParams.add(encodeOAuthParameter("oauth_consumer_key", consumerKey));
+        encodeParams.add(encodeOAuthParameter("oauth_nonce", oauthNonce));
+        encodeParams.add(encodeOAuthParameter("oauth_signature_method", OAUTH_SIGNATURE_METHOD));
+        encodeParams.add(encodeOAuthParameter("oauth_timestamp", String.valueOf(timestamp)));
+        encodeParams.add(encodeOAuthParameter("oauth_version", OAUTH_VERSION));
+        if (oauthToken != null) {
+            encodeParams.add(encodeOAuthParameter("oauth_token", oauthToken));
+        }
+        if (queries != null) {
+            for (Pair<String, String> query : queries.toList()) {
+                encodeParams.add(encodeOAuthParameter(query.first, query.second));
+            }
+        }
+        if (params != null && BodyType.FORM.equals(bodyType)) {
+            for (Pair<String, Body> form : params.toList()) {
+                final StringBody second = (StringBody) form.second;
+                if (second != null) {
+                    encodeParams.add(encodeOAuthParameter(form.first, second.value()));
+                } else {
+                    encodeParams.add(encodeOAuthParameter(form.first, null));
+                }
+            }
+        }
+        Collections.sort(encodeParams);
+        final StringBuilder paramBuilder = new StringBuilder();
+        for (int i = 0, j = encodeParams.size(); i < j; i++) {
+            if (i != 0) {
+                paramBuilder.append('&');
+            }
+            paramBuilder.append(encodeParams.get(i));
+        }
+        final StringBuilder signingKey = new StringBuilder();
+        encodeOAuth(consumerSecret, signingKey);
+        signingKey.append('&');
+        if (oauthTokenSecret != null) {
+            encodeOAuth(oauthTokenSecret, signingKey);
+        }
+        try {
+            final Mac mac = Mac.getInstance("HmacSHA1");
+            SecretKeySpec secret = new SecretKeySpec(signingKey.toString().getBytes(), mac.getAlgorithm());
+            mac.init(secret);
+            String urlNoQuery = url.indexOf('?') != -1 ? url.substring(0, url.indexOf('?')) : url;
+            final StringBuilder baseString = new StringBuilder();
+            encodeOAuth(method, baseString);
+            baseString.append('&');
+            encodeOAuth(urlNoQuery, baseString);
+            baseString.append('&');
+            encodeOAuth(paramBuilder.toString(), baseString);
+            final byte[] signature = mac.doFinal(baseString.toString().getBytes(DEFAULT_ENCODING));
+            return Base64.encodeNoWrap(signature);
+        } catch (NoSuchAlgorithmException e) {
+            throw new UnsupportedOperationException(e);
+        } catch (InvalidKeyException | UnsupportedEncodingException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private List<Pair<String, String>> generateOAuthParams(String oauthToken,
+                                                   String oauthTokenSecret, String method,
+                                                   String url, MultiValueMap<String> queries,
+                                                   MultiValueMap<Body> params,
+                                                   String bodyType) {
         final String oauthNonce = generateOAuthNonce();
         final long timestamp = System.currentTimeMillis() / 1000;
         final String oauthSignature = generateOAuthSignature(method, url, oauthNonce, timestamp, oauthToken,
@@ -230,17 +235,12 @@ public class OAuthAuthorization implements Authorization {
         return encodeParams;
     }
 
-    @Override
-    public boolean hasAuthorization() {
-        return true;
-    }
-
-    private String encodeParameter(String key, String value) {
+    private String encodeOAuthParameter(String key, String value) {
         final StringBuilder sb = new StringBuilder();
-        encode(key, sb);
+        encodeOAuth(key, sb);
         if (value != null) {
             sb.append('=');
-            encode(value, sb);
+            encodeOAuth(value, sb);
         }
         return sb.toString();
     }
@@ -249,7 +249,7 @@ public class OAuthAuthorization implements Authorization {
         return OAUTH_ENCODING.serialize(value, DEFAULT_CHARSET);
     }
 
-    private static void encode(final String value, final StringBuilder sb) {
+    private static void encodeOAuth(final String value, final StringBuilder sb) {
         OAUTH_ENCODING.serialize(value, DEFAULT_CHARSET, sb);
     }
 

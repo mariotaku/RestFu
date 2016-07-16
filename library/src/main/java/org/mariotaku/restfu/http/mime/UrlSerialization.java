@@ -45,12 +45,10 @@ public abstract class UrlSerialization {
 
         @Override
         protected void appendEscape(int codePoint, Charset charset, StringBuilder target) {
-            if (codePoint == 0x20) {
-                target.append('+');
-            } else if (codePoint <= 0xFF && !allowedSet.get(codePoint)) {
-                percentEncode(codePoint, charset, target);
-            } else {
+            if (codePoint <= 0xFF && allowedSet.get(codePoint)) {
                 target.appendCodePoint(codePoint);
+            } else {
+                percentEncode(codePoint, charset, target);
             }
         }
     };
@@ -82,10 +80,10 @@ public abstract class UrlSerialization {
         protected void appendEscape(int codePoint, Charset charset, StringBuilder target) {
             if (codePoint == 0x20) {
                 target.append('+');
-            } else if (codePoint <= 0xFF && !allowedSet.get(codePoint)) {
-                percentEncode(codePoint, charset, target);
-            } else {
+            } else if (codePoint <= 0xFF && allowedSet.get(codePoint)) {
                 target.appendCodePoint(codePoint);
+            } else {
+                percentEncode(codePoint, charset, target);
             }
         }
     };
@@ -99,7 +97,7 @@ public abstract class UrlSerialization {
         for (int i = 0, j = encoded.limit(); i < j; i++) {
             target.append('%');
             byte v = encoded.get(i);
-            target.append(HEX_CHAR_TABLE[v >>> 4]);
+            target.append(HEX_CHAR_TABLE[(v & 0xF0) >>> 4]);
             target.append(HEX_CHAR_TABLE[v & 0xF]);
         }
     }
