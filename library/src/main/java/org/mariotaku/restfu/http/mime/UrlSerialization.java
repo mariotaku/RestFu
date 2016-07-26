@@ -61,7 +61,7 @@ public abstract class UrlSerialization {
 
         {
             allowedSet = new BitSet(0xFF);
-            allowedSet.set('*', true);
+//            allowedSet.set('*', true);
             allowedSet.set('-', true);
             allowedSet.set('.', true);
             allowedSet.set('_', true);

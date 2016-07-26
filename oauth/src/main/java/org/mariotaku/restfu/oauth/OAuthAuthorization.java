@@ -219,7 +219,7 @@ public class OAuthAuthorization implements Authorization {
         final List<Pair<String, String>> encodeParams = new ArrayList<>();
         encodeParams.add(Pair.create("oauth_consumer_key", consumerKey));
         encodeParams.add(Pair.create("oauth_nonce", oauthNonce));
-        encodeParams.add(Pair.create("oauth_signature", encode(oauthSignature)));
+        encodeParams.add(Pair.create("oauth_signature", encodeOAuth(oauthSignature)));
         encodeParams.add(Pair.create("oauth_signature_method", OAUTH_SIGNATURE_METHOD));
         encodeParams.add(Pair.create("oauth_timestamp", String.valueOf(timestamp)));
         encodeParams.add(Pair.create("oauth_version", OAUTH_VERSION));
@@ -245,7 +245,7 @@ public class OAuthAuthorization implements Authorization {
         return sb.toString();
     }
 
-    private static String encode(final String value) {
+    private static String encodeOAuth(final String value) {
         return OAUTH_ENCODING.serialize(value, DEFAULT_CHARSET);
     }
 
