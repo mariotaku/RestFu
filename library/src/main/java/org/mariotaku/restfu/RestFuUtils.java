@@ -182,8 +182,10 @@ public class RestFuUtils {
             }
             final Pair<String, String> form = list.get(i);
             UrlSerialization.QUERY.serialize(form.first, charset, sb);
-            sb.append('=');
-            UrlSerialization.QUERY.serialize(form.second, charset, sb);
+            if (form.second != null) {
+                sb.append('=');
+                UrlSerialization.QUERY.serialize(form.second, charset, sb);
+            }
         }
     }
 
