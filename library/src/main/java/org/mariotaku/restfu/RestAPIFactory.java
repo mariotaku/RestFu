@@ -118,12 +118,12 @@ public class RestAPIFactory<E extends Exception> {
         private final ValueMap constantPoll;
 
         public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
-                                     RestHttpClient restClient,
-                                     RestConverter.Factory<E> converterFactory,
-                                     RestRequest.Factory<E> restRequestFactory,
-                                     HttpRequest.Factory httpRequestFactory,
-                                     ExceptionFactory<E> exceptionFactory,
-                                     ValueMap constantPoll, ResultDispatcher<E> resultDispatcher) {
+                RestHttpClient restClient,
+                RestConverter.Factory<E> converterFactory,
+                RestRequest.Factory<E> restRequestFactory,
+                HttpRequest.Factory httpRequestFactory,
+                ExceptionFactory<E> exceptionFactory,
+                ValueMap constantPoll, ResultDispatcher<E> resultDispatcher) {
             this.endpoint = endpoint;
             this.authorization = authorization;
             this.restClient = restClient;
@@ -174,7 +174,6 @@ public class RestAPIFactory<E extends Exception> {
                 // Get converter before network requests, https://github.com/TwidereProject/Twidere-Android/issues/378
                 // We can throw exceptions before network requests sent
                 final Type returnType = method.getGenericReturnType();
-                final RestConverter<HttpResponse, ?, E> converter = converterFactory.forResponse(returnType);
                 restRequest = requestInfoFactory.create(restMethod, converterFactory, constantPoll);
                 httpRequest = requestFactory.create(endpoint, restRequest, authorization, converterFactory);
                 httpCall = restClient.newCall(httpRequest);
@@ -182,7 +181,7 @@ public class RestAPIFactory<E extends Exception> {
                 if (!httpResponse.isSuccessful()) {
                     return onError(null, httpRequest, httpResponse, callback);
                 }
-                return onResult(converter, httpResponse, callback);
+                return onResult(returnType, httpResponse, callback);
             } catch (IOException e) {
                 return onError(e, httpRequest, httpResponse, callback);
             } catch (RestConverter.ConvertException e) {
@@ -193,10 +192,12 @@ public class RestAPIFactory<E extends Exception> {
             }
         }
 
-        private <T> Object onResult(RestConverter<HttpResponse, T, E> converter, HttpResponse httpResponse,
-                                    @Nullable final Callback<?, E> callback) throws RestConverter.ConvertException, E,
-                IOException {
+        private <T> Object onResult(Type returnType, HttpResponse httpResponse, @Nullable final Callback<?, E> callback)
+                throws RestConverter.ConvertException, E, IOException {
             if (callback == null) {
+                //noinspection unchecked
+                final RestConverter<HttpResponse, T, E> converter = (RestConverter<HttpResponse, T, E>)
+                        converterFactory.forResponse(returnType);
                 return converter.convert(httpResponse);
             }
             if (callback instanceof RawCallback) {
@@ -206,6 +207,9 @@ public class RestAPIFactory<E extends Exception> {
             } else {
                 //noinspection unchecked
                 Callback<T, E> typedCallback = (Callback<T, E>) callback;
+                //noinspection unchecked
+                final RestConverter<HttpResponse, T, E> converter = (RestConverter<HttpResponse, T, E>)
+                        converterFactory.forResponse(returnType);
                 resultDispatcher.dispatchResult(typedCallback, converter.convert(httpResponse));
             }
             return null;
@@ -213,7 +217,7 @@ public class RestAPIFactory<E extends Exception> {
 
 
         private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
-                               @Nullable final Callback<?, E> callback) throws E {
+                @Nullable final Callback<?, E> callback) throws E {
             final E exception = exceptionFactory.newException(cause, httpRequest, response);
             if (callback == null) {
                 throw exception;
