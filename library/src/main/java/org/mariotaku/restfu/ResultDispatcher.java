@@ -1,25 +1,26 @@
 package org.mariotaku.restfu;
 
-import org.mariotaku.restfu.callback.ErrorCallback;
-import org.mariotaku.restfu.callback.RestCallback;
+import org.mariotaku.restfu.callback.Callback;
+
+import java.io.IOException;
 
 /**
  * Created by mariotaku on 16/6/6.
  */
-public interface ResultDispatcher {
-    <T> void dispatchResult(RestCallback<T> callback, T obj);
+public interface ResultDispatcher<E extends Exception> {
+    <T> void dispatchResult(Callback<T, E> callback, T obj) throws IOException, E;
 
-    <E extends Exception> void dispatchException(ErrorCallback<E> callback, E ex);
+    <T> void dispatchException(Callback<T, E> callback, E ex);
 
-    final class Default implements ResultDispatcher {
+    final class Default<E extends Exception> implements ResultDispatcher<E> {
 
         @Override
-        public <T> void dispatchResult(RestCallback<T> callback, T result) {
+        public <T> void dispatchResult(Callback<T, E> callback, T result) throws IOException, E {
             callback.result(result);
         }
 
         @Override
-        public <E extends Exception> void dispatchException(ErrorCallback<E> callback, E exception) {
+        public <T> void dispatchException(Callback<T, E> callback, E exception) {
             callback.error(exception);
         }
     }

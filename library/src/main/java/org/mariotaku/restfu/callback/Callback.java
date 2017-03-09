@@ -16,10 +16,14 @@
 
 package org.mariotaku.restfu.callback;
 
+
+import java.io.IOException;
+
 /**
  * Created by mariotaku on 15/2/7.
  */
-public interface RestCallback<T> extends ErrorCallback {
-    void result(T result);
+public interface Callback<T, E extends Exception> {
+    void result(T result) throws E, IOException;
 
+    void error(E exception);
 }

@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'Main'
 
 dependencies {
     compile project(':library')
     compile project(':urlconnection')
     compile 'com.google.code.gson:gson:2.5'
+    compile 'commons-io:commons-io:2.5'
 }

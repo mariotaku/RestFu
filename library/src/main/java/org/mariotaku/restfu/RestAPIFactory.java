@@ -16,8 +16,10 @@
 
 package org.mariotaku.restfu;
 
-import org.mariotaku.restfu.callback.ErrorCallback;
-import org.mariotaku.restfu.callback.RestCallback;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.mariotaku.restfu.callback.Callback;
+import org.mariotaku.restfu.callback.RawCallback;
 import org.mariotaku.restfu.http.*;
 
 import java.io.IOException;
@@ -27,14 +29,15 @@ public class RestAPIFactory<E extends Exception> {
 
     private Endpoint endpoint;
     private Authorization authorization;
+    private ValueMap constantPool;
+
     private RestHttpClient httpClient;
 
     private HttpRequest.Factory httpRequestFactory = new HttpRequest.DefaultFactory();
     private RestRequest.Factory<E> restRequestFactory = new RestRequest.DefaultFactory<>();
     private RestConverter.Factory<E> restConverterFactory;
     private ExceptionFactory<E> exceptionFactory;
-    private ResultDispatcher resultDispatcher = new ResultDispatcher.Default();
-    private ValueMap constantPool;
+    private ResultDispatcher<E> resultDispatcher = new ResultDispatcher.Default<>();
 
     public RestAPIFactory() {
 
@@ -44,7 +47,7 @@ public class RestAPIFactory<E extends Exception> {
         this.constantPool = constantPool;
     }
 
-    public void setEndpoint(Endpoint endpoint) {
+    public void setEndpoint(@NotNull Endpoint endpoint) {
         this.endpoint = endpoint;
     }
 
@@ -52,27 +55,27 @@ public class RestAPIFactory<E extends Exception> {
         this.authorization = authorization;
     }
 
-    public void setHttpClient(RestHttpClient restClient) {
+    public void setHttpClient(@NotNull RestHttpClient restClient) {
         this.httpClient = restClient;
     }
 
-    public void setHttpRequestFactory(HttpRequest.Factory factory) {
+    public void setHttpRequestFactory(@NotNull HttpRequest.Factory factory) {
         this.httpRequestFactory = factory;
     }
 
-    public void setExceptionFactory(ExceptionFactory<E> factory) {
+    public void setExceptionFactory(@NotNull ExceptionFactory<E> factory) {
         this.exceptionFactory = factory;
     }
 
-    public void setRestConverterFactory(RestConverter.Factory<E> restConverterFactory) {
+    public void setRestConverterFactory(@NotNull RestConverter.Factory<E> restConverterFactory) {
         this.restConverterFactory = restConverterFactory;
     }
 
-    public void setRestRequestFactory(RestRequest.Factory<E> restRequestFactory) {
+    public void setRestRequestFactory(@NotNull RestRequest.Factory<E> restRequestFactory) {
         this.restRequestFactory = restRequestFactory;
     }
 
-    public void setResultDispatcher(ResultDispatcher resultDispatcher) {
+    public void setResultDispatcher(@NotNull ResultDispatcher<E> resultDispatcher) {
         this.resultDispatcher = resultDispatcher;
     }
 
@@ -110,9 +113,9 @@ public class RestAPIFactory<E extends Exception> {
         private final RestRequest.Factory<E> requestInfoFactory;
         private final HttpRequest.Factory requestFactory;
         private final ExceptionFactory<E> exceptionFactory;
-        private final ValueMap constantPoll;
+        private final ResultDispatcher<E> resultDispatcher;
         private final RestHttpClient restClient;
-        private final ResultDispatcher resultDispatcher;
+        private final ValueMap constantPoll;
 
         public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
                                      RestHttpClient restClient,
@@ -120,7 +123,7 @@ public class RestAPIFactory<E extends Exception> {
                                      RestRequest.Factory<E> restRequestFactory,
                                      HttpRequest.Factory httpRequestFactory,
                                      ExceptionFactory<E> exceptionFactory,
-                                     ValueMap constantPoll, ResultDispatcher resultDispatcher) {
+                                     ValueMap constantPoll, ResultDispatcher<E> resultDispatcher) {
             this.endpoint = endpoint;
             this.authorization = authorization;
             this.restClient = restClient;
@@ -162,6 +165,7 @@ public class RestAPIFactory<E extends Exception> {
                 throw new RuntimeException(e);
             }
             final RestMethod<E> restMethod = RestMethod.get(method, args);
+            final Callback<?, E> callback = findCallback(args);
             RestRequest restRequest;
             HttpCall httpCall = null;
             HttpRequest httpRequest = null;
@@ -176,46 +180,61 @@ public class RestAPIFactory<E extends Exception> {
                 httpCall = restClient.newCall(httpRequest);
                 httpResponse = httpCall.execute();
                 if (!httpResponse.isSuccessful()) {
-                    return onError(null, httpRequest, httpResponse, args);
+                    return onError(null, httpRequest, httpResponse, callback);
                 }
-                return onResult(converter.convert(httpResponse), args);
+                return onResult(converter, httpResponse, callback);
             } catch (IOException e) {
-                return onError(e, httpRequest, httpResponse, args);
+                return onError(e, httpRequest, httpResponse, callback);
             } catch (RestConverter.ConvertException e) {
-                return onError(e, httpRequest, httpResponse, args);
+                return onError(e, httpRequest, httpResponse, callback);
             } finally {
                 RestFuUtils.closeSilently(httpResponse);
                 RestFuUtils.closeSilently(httpCall);
             }
         }
 
-        private <T> Object onResult(T converted, Object[] args) {
-            if (args != null) {
-                for (Object arg : args) {
-                    if (arg instanceof RestCallback) {
-                        //noinspection unchecked
-                        resultDispatcher.dispatchResult((RestCallback<T>) arg, converted);
-                        return null;
-                    }
-                }
+        private <T> Object onResult(RestConverter<HttpResponse, T, E> converter, HttpResponse httpResponse,
+                                    @Nullable final Callback<?, E> callback) throws RestConverter.ConvertException, E,
+                IOException {
+            if (callback == null) {
+                return converter.convert(httpResponse);
             }
-            return converted;
+            if (callback instanceof RawCallback) {
+                //noinspection unchecked
+                RawCallback<E> rawCallback = (RawCallback<E>) callback;
+                resultDispatcher.dispatchResult(rawCallback, httpResponse);
+            } else {
+                //noinspection unchecked
+                Callback<T, E> typedCallback = (Callback<T, E>) callback;
+                resultDispatcher.dispatchResult(typedCallback, converter.convert(httpResponse));
+            }
+            return null;
         }
 
+
         private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
-                               final Object[] args) throws E {
+                               @Nullable final Callback<?, E> callback) throws E {
             final E exception = exceptionFactory.newException(cause, httpRequest, response);
-            if (args != null) {
-                for (Object arg : args) {
-                    if (arg instanceof ErrorCallback) {
-                        //noinspection unchecked
-                        resultDispatcher.dispatchException((ErrorCallback<E>) arg, exception);
-                        return null;
-                    }
+            if (callback == null) {
+                throw exception;
+            }
+            //noinspection unchecked
+            resultDispatcher.dispatchException(callback, exception);
+            return null;
+        }
+
+        @Nullable
+        private <T> Callback<T, E> findCallback(@Nullable Object[] args) {
+            if (args == null) return null;
+            for (Object arg : args) {
+                if (arg instanceof Callback) {
+                    //noinspection unchecked
+                    return (Callback<T, E>) arg;
                 }
             }
-            throw exception;
+            return null;
         }
+
     }
 
 }

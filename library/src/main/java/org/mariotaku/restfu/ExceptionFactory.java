@@ -16,6 +16,7 @@
 
 package org.mariotaku.restfu;
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.http.HttpRequest;
 import org.mariotaku.restfu.http.HttpResponse;
 
@@ -24,6 +25,7 @@ import org.mariotaku.restfu.http.HttpResponse;
  */
 public interface ExceptionFactory<E extends Exception> {
 
+    @NotNull
     E newException(final Throwable cause, final HttpRequest request, final HttpResponse response);
 
 }

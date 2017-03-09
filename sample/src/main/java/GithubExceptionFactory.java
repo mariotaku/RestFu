@@ -1,3 +1,4 @@
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.ExceptionFactory;
 import org.mariotaku.restfu.http.HttpRequest;
 import org.mariotaku.restfu.http.HttpResponse;
@@ -7,6 +8,7 @@ import org.mariotaku.restfu.http.HttpResponse;
  */
 public class GithubExceptionFactory implements ExceptionFactory<GithubException> {
     @Override
+    @NotNull
     public GithubException newException(Throwable cause, HttpRequest request, HttpResponse response) {
         return new GithubException();
     }
