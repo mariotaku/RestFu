@@ -17,13 +17,15 @@
 package org.mariotaku.restfu.callback;
 
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 
 /**
  * Created by mariotaku on 15/2/7.
  */
 public interface Callback<T, E extends Exception> {
-    void result(T result) throws E, IOException;
+    void result(@NotNull T result) throws E, IOException;
 
-    void error(E exception);
+    void error(@NotNull E exception);
 }

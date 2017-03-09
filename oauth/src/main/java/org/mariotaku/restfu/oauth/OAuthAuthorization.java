@@ -19,6 +19,8 @@
 
 package org.mariotaku.restfu.oauth;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.http.Authorization;
@@ -77,28 +79,33 @@ public class OAuthAuthorization implements Authorization {
     private static final Charset DEFAULT_CHARSET = Charset.forName(DEFAULT_ENCODING);
     private static final String OAUTH_SIGNATURE_METHOD = "HMAC-SHA1";
     private static final String OAUTH_VERSION = "1.0";
+    @NotNull
     private final String consumerKey, consumerSecret;
+    @Nullable
     private final OAuthToken oauthToken;
-    SecureRandom secureRandom = new SecureRandom();
+    private final SecureRandom secureRandom = new SecureRandom();
 
-    public OAuthAuthorization(String consumerKey, String consumerSecret) {
+    public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret) {
         this(consumerKey, consumerSecret, null);
     }
 
-    public OAuthAuthorization(String consumerKey, String consumerSecret, OAuthToken oauthToken) {
+    public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret, @Nullable OAuthToken oauthToken) {
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret;
         this.oauthToken = oauthToken;
     }
 
+    @NotNull
     public String getConsumerKey() {
         return consumerKey;
     }
 
+    @NotNull
     public String getConsumerSecret() {
         return consumerSecret;
     }
 
+    @Nullable
     public OAuthToken getOauthToken() {
         return oauthToken;
     }
@@ -144,11 +151,11 @@ public class OAuthAuthorization implements Authorization {
     }
 
     private String generateOAuthSignature(String method, String url,
-                                          String oauthNonce, long timestamp,
-                                          String oauthToken, String oauthTokenSecret,
-                                          MultiValueMap<String> queries,
-                                          MultiValueMap<Body> params,
-                                          String bodyType) {
+            String oauthNonce, long timestamp,
+            String oauthToken, String oauthTokenSecret,
+            MultiValueMap<String> queries,
+            MultiValueMap<Body> params,
+            String bodyType) {
         final List<String> encodeParams = new ArrayList<>();
         encodeParams.add(encodeOAuthParameter("oauth_consumer_key", consumerKey));
         encodeParams.add(encodeOAuthParameter("oauth_nonce", oauthNonce));
@@ -208,10 +215,10 @@ public class OAuthAuthorization implements Authorization {
     }
 
     private List<Pair<String, String>> generateOAuthParams(String oauthToken,
-                                                   String oauthTokenSecret, String method,
-                                                   String url, MultiValueMap<String> queries,
-                                                   MultiValueMap<Body> params,
-                                                   String bodyType) {
+            String oauthTokenSecret, String method,
+            String url, MultiValueMap<String> queries,
+            MultiValueMap<Body> params,
+            String bodyType) {
         final String oauthNonce = generateOAuthNonce();
         final long timestamp = System.currentTimeMillis() / 1000;
         final String oauthSignature = generateOAuthSignature(method, url, oauthNonce, timestamp, oauthToken,

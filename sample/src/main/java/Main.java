@@ -1,4 +1,5 @@
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestAPIFactory;
 import org.mariotaku.restfu.callback.RawCallback;
 import org.mariotaku.restfu.http.Endpoint;
@@ -23,12 +24,12 @@ public class Main {
         System.out.println("Trying raw request");
         github.rawContributors("mariotaku", "RestFu", new RawCallback<GithubException>() {
             @Override
-            public void result(HttpResponse result) throws IOException {
+            public void result(@NotNull HttpResponse result) throws IOException {
                 IOUtils.copy(result.getBody().stream(), System.out);
             }
 
             @Override
-            public void error(GithubException exception) {
+            public void error(@NotNull GithubException exception) {
                 exception.printStackTrace();
             }
         });

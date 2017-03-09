@@ -19,6 +19,7 @@ package org.mariotaku.restfu.okhttp3;
 import okhttp3.*;
 import okio.BufferedSink;
 import okio.Okio;
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
@@ -39,8 +40,9 @@ public class OkHttpRestClient implements RestHttpClient {
         setClient(client);
     }
 
+    @NotNull
     @Override
-    public HttpCall newCall(final HttpRequest httpRequest) {
+    public HttpCall newCall(@NotNull final HttpRequest httpRequest) {
         final Request.Builder builder = new Request.Builder();
         builder.method(httpRequest.getMethod(), RestToOkRequestBody.wrap(httpRequest.getBody()));
         builder.url(httpRequest.getUrl());
@@ -54,7 +56,7 @@ public class OkHttpRestClient implements RestHttpClient {
     }
 
     @Override
-    public void enqueue(final HttpCall call, final HttpCallback callback) {
+    public void enqueue(@NotNull final HttpCall call, @NotNull final HttpCallback callback) {
         call.enqueue(callback);
     }
 

@@ -16,13 +16,15 @@
 
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Created by mariotaku on 15/2/7.
  */
 public interface RestHttpClient {
 
-    HttpCall newCall(HttpRequest request);
+    @NotNull HttpCall newCall(@NotNull HttpRequest request);
 
-    void enqueue(HttpCall call, HttpCallback callback);
+    void enqueue(@NotNull HttpCall call, @NotNull HttpCallback callback);
 
 }

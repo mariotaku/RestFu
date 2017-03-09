@@ -1,5 +1,6 @@
 package org.mariotaku.restfu.urlconnection;
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.commons.io.StreamUtils;
 import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.http.*;
@@ -17,13 +18,14 @@ import java.util.Map;
  * Created by mariotaku on 16/2/12.
  */
 public class URLConnectionRestClient implements RestHttpClient {
+    @NotNull
     @Override
-    public HttpCall newCall(HttpRequest request) {
+    public HttpCall newCall(@NotNull HttpRequest request) {
         return new URLConnectionCall(request);
     }
 
     @Override
-    public void enqueue(HttpCall call, HttpCallback callback) {
+    public void enqueue(@NotNull HttpCall call, @NotNull HttpCallback callback) {
         call.enqueue(callback);
     }
 

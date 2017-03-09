@@ -17,8 +17,9 @@
 package org.mariotaku.restfu.http;
 
 
-import org.mariotaku.restfu.RestRequest;
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestFuUtils;
+import org.mariotaku.restfu.RestRequest;
 
 import java.nio.charset.Charset;
 
@@ -27,17 +28,19 @@ import java.nio.charset.Charset;
  */
 public class Endpoint {
 
+    @NotNull
     private String url;
 
+    @NotNull
     public String getUrl() {
         return url;
     }
 
-    public Endpoint(String url) {
+    public Endpoint(@NotNull String url) {
         this.url = url;
     }
 
-    public static String constructUrl(String endpoint, RestRequest restRequest) {
+    public static String constructUrl(@NotNull String endpoint, @NotNull RestRequest restRequest) {
         return constructUrl(endpoint, restRequest.getPath(), restRequest.getQueries());
     }
 

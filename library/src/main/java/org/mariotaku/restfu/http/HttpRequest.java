@@ -117,8 +117,7 @@ public final class HttpRequest {
 
         @Override
         public <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest requestInfo,
-                                                        Authorization authorization,
-                                                        RestConverter.Factory<E> converterFactory) throws E,
+                Authorization authorization, RestConverter.Factory<E> converterFactory) throws E,
                 RestConverter.ConvertException, IOException {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
             final MultiValueMap<String> headers = requestInfo.getHeaders();
@@ -135,7 +134,6 @@ public final class HttpRequest {
      */
     public interface Factory {
         <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
-                                                 RestConverter.Factory<E> converterFactory) throws E,
-                RestConverter.ConvertException, IOException;
+                RestConverter.Factory<E> converterFactory) throws E, RestConverter.ConvertException, IOException;
     }
 }
