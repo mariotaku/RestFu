@@ -149,7 +149,7 @@ public class OAuthAuthorization implements Authorization {
         final StringBuilder headerBuilder = new StringBuilder();
         headerBuilder.append("OAuth ");
         if (realm != null) {
-            headerBuilder.append("realm = ");
+            headerBuilder.append("realm=");
             headerBuilder.append(realm);
             headerBuilder.append(" ");
         }
