@@ -79,20 +79,31 @@ public class OAuthAuthorization implements Authorization {
     private static final Charset DEFAULT_CHARSET = Charset.forName(DEFAULT_ENCODING);
     private static final String OAUTH_SIGNATURE_METHOD = "HMAC-SHA1";
     private static final String OAUTH_VERSION = "1.0";
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
     @NotNull
     private final String consumerKey, consumerSecret;
     @Nullable
     private final OAuthToken oauthToken;
-    private final SecureRandom secureRandom = new SecureRandom();
+    @Nullable
+    private final String realm;
 
     public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret) {
         this(consumerKey, consumerSecret, null);
     }
 
-    public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret, @Nullable OAuthToken oauthToken) {
+    public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret,
+            @Nullable OAuthToken oauthToken) {
+        this(consumerKey, consumerSecret, oauthToken, null);
+    }
+
+    public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret,
+            @Nullable OAuthToken oauthToken, @Nullable String realm) {
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret;
         this.oauthToken = oauthToken;
+        this.realm = realm;
     }
 
     @NotNull
@@ -108,6 +119,11 @@ public class OAuthAuthorization implements Authorization {
     @Nullable
     public OAuthToken getOauthToken() {
         return oauthToken;
+    }
+
+    @Nullable
+    public String getRealm() {
+        return realm;
     }
 
     @Override
@@ -132,6 +148,11 @@ public class OAuthAuthorization implements Authorization {
                 method, url, queries, params, request.getBodyType());
         final StringBuilder headerBuilder = new StringBuilder();
         headerBuilder.append("OAuth ");
+        if (realm != null) {
+            headerBuilder.append("realm = ");
+            headerBuilder.append(realm);
+            headerBuilder.append(" ");
+        }
         for (int i = 0, j = encodeParams.size(); i < j; i++) {
             if (i != 0) {
                 headerBuilder.append(", ");
