@@ -126,6 +126,20 @@ public class RestFuUtils {
         }
     }
 
+    public static String[] toStringArray(Object value) {
+        final int length = Array.getLength(value);
+        final String[] out = new String[length];
+        for (int i = 0; i < length; i++) {
+            Object item = Array.get(value, i);
+            if (item != null) {
+                out[i] = item.toString();
+            } else {
+                out[i] = null;
+            }
+        }
+        return out;
+    }
+
     public static <E extends Exception> Body[] toBodies(Object value, RestConverter.Factory<E> factory, char delimiter)
             throws RestConverter.ConvertException, IOException, E {
         if (value == null) throw new NullPointerException();

@@ -56,9 +56,9 @@ public final class RestMethod<E extends Exception> {
     private Map<String, Object> extrasCache;
 
     public RestMethod(HttpMethod method, String path, BodyType bodyType, ArrayList<Pair<Path, Object>> paths,
-                      ArrayList<Pair<Header, Object>> headers, ArrayList<Pair<Query, Object>> queries,
-                      ArrayList<Pair<Param, Object>> params, ArrayList<Pair<Extra, Object>> extras,
-                      Headers headerConstants, Queries queryConstants, Params paramConstants, RawValue rawValue) {
+            ArrayList<Pair<Header, Object>> headers, ArrayList<Pair<Query, Object>> queries,
+            ArrayList<Pair<Param, Object>> params, ArrayList<Pair<Extra, Object>> extras,
+            Headers headerConstants, Queries queryConstants, Params paramConstants, RawValue rawValue) {
         this.method = method;
         this.path = path;
         this.bodyType = bodyType;
@@ -193,6 +193,11 @@ public final class RestMethod<E extends Exception> {
                     header = null;
                 } else if (from instanceof HeaderValue) {
                     header = ((HeaderValue) from).toHeaderValue();
+                } else if (from.getClass().isArray()) {
+                    if (arrayDelimiter == '\0') {
+                        return RestFuUtils.toStringArray(from);
+                    }
+                    header = RestFuUtils.toString(from, arrayDelimiter);
                 } else {
                     header = from.toString();
                 }
@@ -216,6 +221,9 @@ public final class RestMethod<E extends Exception> {
             @Override
             public String[] convert(Object from, char arrayDelimiter) throws RestConverter.ConvertException, IOException {
                 if (from == null) return new String[]{null};
+                if (arrayDelimiter == '\0' && from.getClass().isArray()) {
+                    return RestFuUtils.toStringArray(from);
+                }
                 return new String[]{RestFuUtils.toString(from, arrayDelimiter)};
             }
         };
@@ -275,7 +283,7 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static void checkMethod(HttpMethod httpMethod, ArrayList<Pair<Param, Object>> params,
-                                    RawValue fileValue) {
+            RawValue fileValue) {
         if (httpMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @" +
                     HttpMethod.class.getSimpleName());
@@ -286,10 +294,10 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <A extends Annotation, T, E extends Exception> void addConstants(final A annotation,
-                                                                                    final ValueMap valuesPool,
-                                                                                    final Converter<T, E> converter,
-                                                                                    final MultiValueMap<T> target,
-                                                                                    final Sanitizer<T> sanitizer)
+            final ValueMap valuesPool,
+            final Converter<T, E> converter,
+            final MultiValueMap<T> target,
+            final Sanitizer<T> sanitizer)
             throws RestConverter.ConvertException, IOException, E {
         consumeConstants(annotation, new ConstantIterateConsumer<E>() {
             @Override
@@ -311,7 +319,7 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <T extends Annotation, E extends Exception> void consumeArguments(final ArrayList<Pair<T, Object>> list,
-                                                                                     final ArgumentIterateConsumer<E> consumer)
+            final ArgumentIterateConsumer<E> consumer)
             throws RestConverter.ConvertException, IOException, E {
         if (list == null) return;
         for (Pair<?, Object> pair : list) {
@@ -375,9 +383,9 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <A extends Annotation, O, E extends Exception> void addArgumentsToMap(ArrayList<Pair<A, Object>> list,
-                                                                                         final MultiValueMap<O> map,
-                                                                                         final Converter<O, E> converter,
-                                                                                         final Sanitizer<O> sanitizer)
+            final MultiValueMap<O> map,
+            final Converter<O, E> converter,
+            final Sanitizer<O> sanitizer)
             throws RestConverter.ConvertException, IOException, E {
         consumeArguments(list, new ArgumentIterateConsumer<E>() {
             @Override
@@ -390,8 +398,8 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <T, E extends Exception> void addToMap(final String[] names, final Object object,
-                                                          final MultiValueMap<T> map, final char arrayDelimiter,
-                                                          final Converter<T, E> converter, final Sanitizer<T> sanitizer)
+            final MultiValueMap<T> map, final char arrayDelimiter,
+            final Converter<T, E> converter, final Sanitizer<T> sanitizer)
             throws RestConverter.ConvertException, IOException, E {
         if (object == null) {
             for (String name : names) {
