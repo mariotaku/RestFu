@@ -21,6 +21,7 @@ import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.exception.MethodNotImplementedException;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.StringBody;
 import org.mariotaku.restfu.http.mime.UrlSerialization;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class RestMethod<E extends Exception> {
@@ -129,7 +131,6 @@ public final class RestMethod<E extends Exception> {
         final Headers headerConstants = getAnnotation(method, Headers.class);
         final Queries queryConstants = getAnnotation(method, Queries.class);
         final Params paramConstants = getAnnotation(method, Params.class);
-        checkMethod(httpMethod, params, rawValue);
         return new RestMethod<>(httpMethod, pathFormat, bodyType, paths, headers, queries, params, extras,
                 headerConstants, queryConstants, paramConstants, rawValue);
     }
@@ -252,8 +253,11 @@ public final class RestMethod<E extends Exception> {
     public RestRequest toRestRequest(RestConverter.Factory<E> factory, ValueMap valuesPool)
             throws RestConverter.ConvertException, IOException, E {
         final HttpMethod method = getMethod();
-        return new RestRequest(method.value(), method.allowBody(), getPath(), getHeaders(valuesPool), getQueries(valuesPool),
-                getParams(factory, valuesPool), getRawValue(), getBodyType(), getExtras());
+        final MultiValueMap<Body> params = getParams(factory, valuesPool);
+        final RawValue fileValue = getRawValue();
+        checkMethod(method, params, fileValue);
+        return new RestRequest(method.value(), method.allowBody(), getPath(), getHeaders(valuesPool),
+                getQueries(valuesPool), params, fileValue, getBodyType(), getExtras());
     }
 
     public BodyType getBodyType() {
@@ -282,12 +286,11 @@ public final class RestMethod<E extends Exception> {
         return annotationValue != null && annotationValue.length > 0 ? annotationValue : valueMap.keys();
     }
 
-    private static void checkMethod(HttpMethod httpMethod, ArrayList<Pair<Param, Object>> params,
-            RawValue fileValue) {
+    private static void checkMethod(HttpMethod httpMethod, MultiValueMap<Body> params, RawValue fileValue) {
         if (httpMethod == null)
             throw new MethodNotImplementedException("Method must has annotation annotated with @" +
                     HttpMethod.class.getSimpleName());
-        final boolean hasBody = !params.isEmpty() || fileValue != null;
+        final boolean hasBody = !stringBodyOnly(params) || fileValue != null;
         if (!httpMethod.allowBody() && hasBody) {
             throw new IllegalArgumentException(httpMethod.value() + " does not allow body");
         }
@@ -436,6 +439,15 @@ public final class RestMethod<E extends Exception> {
             annotation = method.getDeclaringClass().getAnnotation(annotationClass);
         }
         return annotation;
+    }
+
+    private static boolean stringBodyOnly(MultiValueMap<Body> params) {
+        for (Map.Entry<String, List<Body>> entry : params.entrySet()) {
+            for (Body body : entry.getValue()) {
+                if (!(body instanceof StringBody)) return false;
+            }
+        }
+        return true;
     }
 
     interface Converter<T, E extends Exception> {

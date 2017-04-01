@@ -30,6 +30,16 @@ public class QueryTest {
         }
     }
 
+    @Test
+    public void testParamAsQuery() throws Exception {
+        TestInterface ti = getTestInterface();
+        try {
+            ti.testParamAsQuery("value");
+        } catch (HttpRequestInfoException e) {
+            Assert.assertEquals("https://example.com/test/query?name=value", e.request.getUrl());
+        }
+    }
+
     private TestInterface getTestInterface() {
         RestAPIFactory<HttpRequestInfoException> factory = new RestAPIFactory<>();
         factory.setEndpoint(new Endpoint("https://example.com"));

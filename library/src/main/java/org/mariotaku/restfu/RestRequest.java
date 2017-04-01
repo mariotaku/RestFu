@@ -46,10 +46,10 @@ public final class RestRequest {
     private String inferredBodyType;
 
     public RestRequest(String method, boolean hasBody, String path,
-                       MultiValueMap<String> headers,
-                       MultiValueMap<String> queries,
-                       MultiValueMap<Body> params,
-                       RawValue file, BodyType bodyType, Map<String, Object> extras) {
+            MultiValueMap<String> headers,
+            MultiValueMap<String> queries,
+            MultiValueMap<Body> params,
+            RawValue file, BodyType bodyType, Map<String, Object> extras) {
         this.method = method;
         this.hasBody = hasBody;
         this.path = path;
@@ -121,6 +121,37 @@ public final class RestRequest {
 
     public String getMethod() {
         return method;
+    }
+
+    /**
+     * @return {@link #queries} + {@link #params} If this request doesn't allows body, {@link #queries} otherwise
+     */
+    public MultiValueMap<String> getRequestQueries() {
+        if (hasBody) {
+            return queries;
+        }
+        MultiValueMap<String> result = new MultiValueMap<>();
+        MultiValueMap<String> queries = getQueries();
+        if (queries != null) {
+            result.addFrom(queries);
+        }
+        MultiValueMap<Body> params = getParams();
+        if (params != null) {
+            for (String key : params.keySet()) {
+                for (Body body : params.get(key)) {
+                    result.add(key, ((StringBody) body).value());
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @return {@link #params} If this request allows body, <code>null</code> otherwise
+     */
+    public MultiValueMap<Body> getRequestParams() {
+        if (hasBody) return params;
+        return null;
     }
 
     /**

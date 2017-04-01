@@ -78,11 +78,34 @@ public final class MultiValueMap<V> {
         }
     }
 
+    public final void addAll(String key, Collection<V> values) {
+        List<V> list = get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            map.put(key, list);
+        }
+        if (values != null) {
+            list.addAll(values);
+        } else {
+            list.add(null);
+        }
+    }
+
+    public void addFrom(MultiValueMap<V> another) {
+        for (Map.Entry<String, List<V>> entry : another.map.entrySet()) {
+            addAll(entry.getKey(), entry.getValue());
+        }
+    }
+
     public boolean isEmpty() {
         return map.isEmpty();
     }
 
     public Set<String> keySet() {
         return map.keySet();
+    }
+
+    public Set<Map.Entry<String, List<V>>> entrySet() {
+        return map.entrySet();
     }
 }

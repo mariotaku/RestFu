@@ -41,7 +41,7 @@ public class Endpoint {
     }
 
     public static String constructUrl(@NotNull String endpoint, @NotNull RestRequest restRequest) {
-        return constructUrl(endpoint, restRequest.getPath(), restRequest.getQueries());
+        return constructUrl(endpoint, restRequest.getPath(), restRequest.getRequestQueries());
     }
 
     public String construct(String path, MultiValueMap<String> queries) {

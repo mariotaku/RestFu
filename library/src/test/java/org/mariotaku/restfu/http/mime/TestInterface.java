@@ -24,6 +24,9 @@ public interface TestInterface {
     @GET("/test/query")
     void testStringArrayDelimQuery(@Query(value = "array", arrayDelimiter = ',') String[] array) throws HttpRequestInfoException;
 
+    @GET("/test/query")
+    void testParamAsQuery(@Param(value = "name") String value) throws HttpRequestInfoException;
+
     @POST("/test/param")
     @BodyType(BodyType.FORM)
     void testStringArrayParam(@Param("array") String[] array) throws HttpRequestInfoException;
