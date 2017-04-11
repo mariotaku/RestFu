@@ -15,6 +15,8 @@ public @interface Headers {
 
     /**
      * Library will trying to load {@link Headers#value()} from template class
+     *
+     * @return Template class
      */
     Class<?> template() default void.class;
 }

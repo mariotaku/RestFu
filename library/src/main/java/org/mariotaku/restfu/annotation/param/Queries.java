@@ -15,6 +15,8 @@ public @interface Queries {
 
     /**
      * Library will trying to load {@link Queries#value()} from template class
+     *
+     * @return Template class
      */
     Class<?> template() default void.class;
 }

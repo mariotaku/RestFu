@@ -15,6 +15,8 @@ public @interface Params {
 
     /**
      * Library will trying to load {@link Params#value()} from template class
+     *
+     * @return Template class
      */
     Class<?> template() default void.class;
 }

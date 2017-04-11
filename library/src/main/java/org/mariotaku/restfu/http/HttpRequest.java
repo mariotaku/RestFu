@@ -56,12 +56,13 @@ public final class HttpRequest {
 
     @Override
     public String toString() {
-        return "RestRequest{" +
-                "method='" + method + '\'' +
-                ", url='" + url + '\'' +
-                ", headers=" + headers +
-                ", body=" + body +
-                '}';
+        StringBuilder sb = new StringBuilder(method);
+        sb.append(' ');
+        sb.append(url);
+        if (body != null) {
+            sb.append(" (has body)");
+        }
+        return sb.toString();
     }
 
     public HttpRequest(String method, String url, MultiValueMap<String> headers, Body body, Object tag) {
