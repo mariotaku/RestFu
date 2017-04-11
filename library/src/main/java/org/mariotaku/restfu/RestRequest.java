@@ -17,6 +17,8 @@
 package org.mariotaku.restfu;
 
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mariotaku.restfu.http.BodyType;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.RawValue;
@@ -169,13 +171,15 @@ public final class RestRequest {
      */
     public interface Factory<E extends Exception> {
 
-        RestRequest create(RestMethod<E> restMethod, RestConverter.Factory<E> factory, ValueMap valuePool)
+        RestRequest create(@NotNull RestMethod<E> restMethod, @NotNull RestConverter.Factory<E> factory,
+                @Nullable ValueMap valuePool)
                 throws RestConverter.ConvertException, IOException, E;
     }
 
     public static class DefaultFactory<E extends Exception> implements Factory<E> {
         @Override
-        public RestRequest create(RestMethod<E> restMethod, RestConverter.Factory<E> factory, ValueMap valuePool)
+        public RestRequest create(@NotNull RestMethod<E> restMethod, @NotNull RestConverter.Factory<E> factory,
+                @Nullable ValueMap valuePool)
                 throws RestConverter.ConvertException, IOException, E {
             return restMethod.toRestRequest(factory, valuePool);
         }

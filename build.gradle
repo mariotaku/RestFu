@@ -1,6 +1,6 @@
 allprojects {
     group 'com.github.mariotaku.RestFu'
-    version = '0.9.47'
+    version = '0.9.48'
 
     repositories {
         mavenLocal()

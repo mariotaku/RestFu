@@ -16,6 +16,8 @@
 
 package org.mariotaku.restfu;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mariotaku.restfu.annotation.HttpMethod;
 import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.exception.MethodNotImplementedException;
@@ -183,7 +185,8 @@ public final class RestMethod<E extends Exception> {
         return sb.toString();
     }
 
-    public MultiValueMap<String> getHeaders(final ValueMap valuesPool) throws RestConverter.ConvertException, IOException, E {
+    public MultiValueMap<String> getHeaders(@Nullable final ValueMap valuesPool) throws RestConverter.ConvertException,
+            IOException, E {
         if (headersCache != null) return headersCache;
         final MultiValueMap<String> map = new MultiValueMap<>(true);
         final Converter<String, E> converter = new Converter<String, E>() {
@@ -211,7 +214,8 @@ public final class RestMethod<E extends Exception> {
         return headersCache = map;
     }
 
-    public MultiValueMap<String> getQueries(ValueMap valuesPool) throws RestConverter.ConvertException, IOException, E {
+    public MultiValueMap<String> getQueries(@Nullable final ValueMap valuesPool) throws RestConverter.ConvertException,
+            IOException, E {
         if (queriesCache != null) return queriesCache;
         final MultiValueMap<String> list = new MultiValueMap<>();
         final int queryIndex = path.indexOf('?');
@@ -234,7 +238,7 @@ public final class RestMethod<E extends Exception> {
         return queriesCache = list;
     }
 
-    public MultiValueMap<Body> getParams(final RestConverter.Factory<E> factory, ValueMap valuesPool)
+    public MultiValueMap<Body> getParams(final RestConverter.Factory<E> factory, @Nullable  final ValueMap valuesPool)
             throws RestConverter.ConvertException, IOException, E {
         if (paramsCache != null) return paramsCache;
         final MultiValueMap<Body> map = new MultiValueMap<>();
@@ -250,7 +254,8 @@ public final class RestMethod<E extends Exception> {
         return paramsCache = map;
     }
 
-    public RestRequest toRestRequest(RestConverter.Factory<E> factory, ValueMap valuesPool)
+    @NotNull
+    public RestRequest toRestRequest(@NotNull RestConverter.Factory<E> factory, @Nullable final ValueMap valuesPool)
             throws RestConverter.ConvertException, IOException, E {
         final HttpMethod method = getMethod();
         final MultiValueMap<Body> params = getParams(factory, valuesPool);
@@ -297,11 +302,9 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <A extends Annotation, T, E extends Exception> void addConstants(final A annotation,
-            final ValueMap valuesPool,
-            final Converter<T, E> converter,
-            final MultiValueMap<T> target,
-            final Sanitizer<T> sanitizer)
-            throws RestConverter.ConvertException, IOException, E {
+            @Nullable  final ValueMap valuesPool, final Converter<T, E> converter,
+            final MultiValueMap<T> target, final Sanitizer<T> sanitizer) throws RestConverter.ConvertException,
+            IOException, E {
         consumeConstants(annotation, new ConstantIterateConsumer<E>() {
             @Override
             public void consume(KeyValue item) throws RestConverter.ConvertException, IOException, E {
@@ -322,8 +325,7 @@ public final class RestMethod<E extends Exception> {
     }
 
     private static <T extends Annotation, E extends Exception> void consumeArguments(final ArrayList<Pair<T, Object>> list,
-            final ArgumentIterateConsumer<E> consumer)
-            throws RestConverter.ConvertException, IOException, E {
+            final ArgumentIterateConsumer<E> consumer) throws RestConverter.ConvertException, IOException, E {
         if (list == null) return;
         for (Pair<?, Object> pair : list) {
             if (pair.first instanceof Header) {
@@ -340,8 +342,8 @@ public final class RestMethod<E extends Exception> {
 
     }
 
-    private static <T extends Annotation, E extends Exception> void consumeConstants(T annotation, ConstantIterateConsumer<E> consumer)
-            throws RestConverter.ConvertException, IOException, E {
+    private static <T extends Annotation, E extends Exception> void consumeConstants(T annotation,
+            ConstantIterateConsumer<E> consumer) throws RestConverter.ConvertException, IOException, E {
         if (annotation == null) return;
         KeyValue[] items;
         if (annotation instanceof Headers) {
