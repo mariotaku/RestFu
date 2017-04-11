@@ -33,7 +33,7 @@ public class RestAPIFactory<E extends Exception> {
 
     private RestHttpClient httpClient;
 
-    private HttpRequest.Factory httpRequestFactory = new HttpRequest.DefaultFactory();
+    private HttpRequest.Factory<E> httpRequestFactory = new HttpRequest.DefaultFactory<>();
     private RestRequest.Factory<E> restRequestFactory = new RestRequest.DefaultFactory<>();
     private RestConverter.Factory<E> restConverterFactory;
     private ExceptionFactory<E> exceptionFactory;
@@ -111,7 +111,7 @@ public class RestAPIFactory<E extends Exception> {
 
         private final RestConverter.Factory<E> converterFactory;
         private final RestRequest.Factory<E> requestInfoFactory;
-        private final HttpRequest.Factory requestFactory;
+        private final HttpRequest.Factory<E> requestFactory;
         private final ExceptionFactory<E> exceptionFactory;
         private final ResultDispatcher<E> resultDispatcher;
         private final RestHttpClient restClient;

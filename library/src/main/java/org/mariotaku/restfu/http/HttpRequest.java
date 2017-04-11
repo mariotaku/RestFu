@@ -117,11 +117,11 @@ public final class HttpRequest {
     }
 
 
-    public static class DefaultFactory implements Factory {
+    public static class DefaultFactory<E extends Exception> implements Factory<E> {
 
         @NotNull
         @Override
-        public <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest requestInfo,
+        public HttpRequest create(Endpoint endpoint, RestRequest requestInfo,
                 Authorization authorization, RestConverter.Factory<E> converterFactory) throws E,
                 RestConverter.ConvertException, IOException {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
@@ -137,9 +137,9 @@ public final class HttpRequest {
     /**
      * Created by mariotaku on 15/5/25.
      */
-    public interface Factory {
+    public interface Factory<E extends Exception> {
         @NotNull
-        <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
+        HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
                 RestConverter.Factory<E> converterFactory) throws E, RestConverter.ConvertException, IOException;
     }
 }
