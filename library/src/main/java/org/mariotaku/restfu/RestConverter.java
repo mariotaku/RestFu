@@ -16,6 +16,7 @@
 
 package org.mariotaku.restfu;
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.http.HttpResponse;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.SimpleBody;
@@ -28,7 +29,8 @@ import java.lang.reflect.Type;
  */
 public interface RestConverter<F, T, E extends Exception> {
 
-    T convert(F from) throws ConvertException, IOException, E;
+    @NotNull
+    T convert(@NotNull F from) throws ConvertException, IOException, E;
 
     interface Factory<E extends Exception> {
 
@@ -51,8 +53,9 @@ public interface RestConverter<F, T, E extends Exception> {
                 this.fromType = fromType;
             }
 
+            @NotNull
             @Override
-            public Body convert(Object from) throws ConvertException, IOException {
+            public Body convert(@NotNull Object from) throws ConvertException, IOException {
                 return SimpleBody.wrap(from);
             }
         }

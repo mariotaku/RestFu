@@ -192,7 +192,8 @@ public class RestAPIFactory<E extends Exception> {
             }
         }
 
-        private <T> Object onResult(Type returnType, HttpResponse httpResponse, @Nullable final Callback<?, E> callback)
+        private <T> Object onResult(Type returnType, @NotNull HttpResponse httpResponse,
+                @Nullable final Callback<?, E> callback)
                 throws RestConverter.ConvertException, E, IOException {
             if (callback == null) {
                 //noinspection unchecked
@@ -216,8 +217,8 @@ public class RestAPIFactory<E extends Exception> {
         }
 
 
-        private Object onError(final Throwable cause, final HttpRequest httpRequest, final HttpResponse response,
-                @Nullable final Callback<?, E> callback) throws E {
+        private Object onError(@Nullable final Throwable cause, @Nullable final HttpRequest httpRequest,
+                @Nullable final HttpResponse response, @Nullable final Callback<?, E> callback) throws E {
             final E exception = exceptionFactory.newException(cause, httpRequest, response);
             if (callback == null) {
                 throw exception;

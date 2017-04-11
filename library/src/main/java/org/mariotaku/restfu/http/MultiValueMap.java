@@ -1,5 +1,7 @@
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mariotaku.restfu.Pair;
 
 import java.util.*;
@@ -29,13 +31,13 @@ public final class MultiValueMap<V> {
         this.ignoreCase = ignoreCase;
     }
 
-    public V getFirst(String key) {
+    public V getFirst(@NotNull String key) {
         final List<V> values = get(key);
         if (values == null || values.isEmpty()) return null;
         return values.get(0);
     }
 
-    public List<V> get(String key) {
+    public List<V> get(@NotNull String key) {
         if (ignoreCase) {
             for (Map.Entry<String, List<V>> entry : map.entrySet()) {
                 if (entry.getKey().equalsIgnoreCase(key)) {
@@ -56,7 +58,7 @@ public final class MultiValueMap<V> {
         return list;
     }
 
-    public final void add(String key, V value) {
+    public final void add(@NotNull String key, V value) {
         List<V> list = get(key);
         if (list == null) {
             list = new ArrayList<>();
@@ -65,7 +67,7 @@ public final class MultiValueMap<V> {
         list.add(value);
     }
 
-    public final void addAll(String key, V[] values) {
+    public final void addAll(@NotNull String key, V[] values) {
         List<V> list = get(key);
         if (list == null) {
             list = new ArrayList<>();
@@ -78,7 +80,7 @@ public final class MultiValueMap<V> {
         }
     }
 
-    public final void addAll(String key, Collection<V> values) {
+    public final void addAll(@NotNull String key, @Nullable Collection<V> values) {
         List<V> list = get(key);
         if (list == null) {
             list = new ArrayList<>();
@@ -91,7 +93,7 @@ public final class MultiValueMap<V> {
         }
     }
 
-    public void addFrom(MultiValueMap<V> another) {
+    public void addFrom(@NotNull MultiValueMap<V> another) {
         for (Map.Entry<String, List<V>> entry : another.map.entrySet()) {
             addAll(entry.getKey(), entry.getValue());
         }

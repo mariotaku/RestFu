@@ -193,13 +193,14 @@ public class OkHttpRestClient implements RestHttpClient {
             this.call = call;
         }
 
+        @NotNull
         @Override
         public HttpResponse execute() throws IOException {
             return new OkResponse(call.execute());
         }
 
         @Override
-        public void enqueue(HttpCallback callback) {
+        public void enqueue(@NotNull HttpCallback callback) {
             call.enqueue(new OkCallback(callback));
         }
 

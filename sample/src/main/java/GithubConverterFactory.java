@@ -1,4 +1,5 @@
 import com.google.gson.Gson;
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.http.HttpResponse;
 import org.mariotaku.restfu.http.mime.SimpleBody;
@@ -31,15 +32,17 @@ public class GithubConverterFactory implements RestConverter.Factory<GithubExcep
             this.toType = toType;
         }
 
+        @NotNull
         @Override
-        public Object convert(HttpResponse from) throws IOException {
+        public Object convert(@NotNull HttpResponse from) throws IOException {
             return gson.fromJson(new InputStreamReader(from.getBody().stream()), toType);
         }
     }
 
     private static class ParamBodyConverter implements RestConverter<Object, Body, GithubException> {
+        @NotNull
         @Override
-        public Body convert(Object from) throws ConvertException, IOException {
+        public Body convert(@NotNull Object from) throws ConvertException, IOException {
             return SimpleBody.wrap(from);
         }
     }

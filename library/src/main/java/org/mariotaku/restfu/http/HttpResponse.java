@@ -55,8 +55,6 @@ public abstract class HttpResponse implements Closeable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("HTTP ");
-        sb.append(Integer.toString(getStatus()));
-        return sb.toString();
+        return "HTTP " + getStatus();
     }
 }

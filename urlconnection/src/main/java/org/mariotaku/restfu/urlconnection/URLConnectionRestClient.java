@@ -38,6 +38,7 @@ public class URLConnectionRestClient implements RestHttpClient {
             this.request = request;
         }
 
+        @NotNull
         @Override
         public HttpResponse execute() throws IOException {
             if (resp != null) throw new IllegalStateException("A call can be executed only once");
@@ -57,7 +58,7 @@ public class URLConnectionRestClient implements RestHttpClient {
         }
 
         @Override
-        public void enqueue(HttpCallback callback) {
+        public void enqueue(@NotNull HttpCallback callback) {
             throw new UnsupportedOperationException();
         }
 

@@ -20,6 +20,7 @@
 package org.mariotaku.restfu.oauth;
 
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.ValueMap;
 
@@ -88,7 +89,7 @@ public class OAuthToken implements ValueMap {
     }
 
     @Override
-    public boolean has(String key) {
+    public boolean has(@NotNull String key) {
         return "oauth_token".equals(key) || "oauth_token_secret".equals(key);
     }
 
@@ -103,7 +104,7 @@ public class OAuthToken implements ValueMap {
     }
 
     @Override
-    public String get(String key) {
+    public String get(@NotNull String key) {
         if ("oauth_token".equals(key)) {
             return oauthToken;
         } else if ("oauth_token_secret".equals(key)) {
@@ -112,6 +113,7 @@ public class OAuthToken implements ValueMap {
         return null;
     }
 
+    @NotNull
     @Override
     public String[] keys() {
         return new String[]{"oauth_token", "oauth_token_secret"};

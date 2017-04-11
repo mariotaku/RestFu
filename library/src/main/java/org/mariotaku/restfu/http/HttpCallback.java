@@ -16,6 +16,8 @@
 
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 
 /**
@@ -23,9 +25,9 @@ import java.io.IOException;
  */
 public interface HttpCallback {
 
-    void response(HttpResponse response);
+    void response(@NotNull HttpResponse response);
 
-    void failure(IOException ioe);
+    void failure(@NotNull IOException ioe);
 
     void cancelled();
 }

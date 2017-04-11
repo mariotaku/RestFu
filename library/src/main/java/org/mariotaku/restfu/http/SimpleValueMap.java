@@ -16,6 +16,9 @@
 
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -28,23 +31,25 @@ public class SimpleValueMap implements ValueMap {
     private final Map<String, Object> internalMap = new HashMap<>();
 
     @Override
-    public boolean has(String key) {
+    public boolean has(@NotNull String key) {
         return internalMap.containsKey(key);
     }
 
     @Override
-    public Object get(String key) {
+    @Nullable
+    public Object get(@NotNull String key) {
         return internalMap.get(key);
     }
 
-    public void put(String key, Object value) {
+    public void put(@NotNull String key, @Nullable Object value) {
         internalMap.put(key, value);
     }
 
-    public void remove(String key) {
+    public void remove(@NotNull String key) {
         internalMap.remove(key);
     }
 
+    @NotNull
     @Override
     public String[] keys() {
         final Set<String> keySet = internalMap.keySet();

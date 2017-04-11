@@ -16,15 +16,20 @@
 
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Created by mariotaku on 15/2/6.
  */
 public interface ValueMap {
 
-    boolean has(String key);
+    boolean has(@NotNull String key);
 
-    Object get(String key);
+    @Nullable
+    Object get(@NotNull String key);
 
+    @NotNull
     String[] keys();
 
 }

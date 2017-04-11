@@ -17,6 +17,7 @@
 package org.mariotaku.restfu.http;
 
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.http.mime.Body;
@@ -24,6 +25,8 @@ import org.mariotaku.restfu.http.mime.Body;
 import java.io.IOException;
 
 /**
+ * HTTP request, holds method, url, headers, and body
+ * <p>
  * Created by mariotaku on 15/2/7.
  */
 public final class HttpRequest {
@@ -116,6 +119,7 @@ public final class HttpRequest {
 
     public static class DefaultFactory implements Factory {
 
+        @NotNull
         @Override
         public <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest requestInfo,
                 Authorization authorization, RestConverter.Factory<E> converterFactory) throws E,
@@ -134,6 +138,7 @@ public final class HttpRequest {
      * Created by mariotaku on 15/5/25.
      */
     public interface Factory {
+        @NotNull
         <E extends Exception> HttpRequest create(Endpoint endpoint, RestRequest info, Authorization authorization,
                 RestConverter.Factory<E> converterFactory) throws E, RestConverter.ConvertException, IOException;
     }

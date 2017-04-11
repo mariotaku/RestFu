@@ -24,6 +24,7 @@ import com.bluelinelabs.logansquare.LoganSquare;
 import com.bluelinelabs.logansquare.ParameterizedType;
 import com.bluelinelabs.logansquare.RestFu_ParameterizedTypeAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.http.ContentType;
 import org.mariotaku.restfu.http.HttpResponse;
@@ -62,10 +63,11 @@ public class LoganSquareConverterFactory<E extends Exception> extends RestConver
         return LoganSquare.mapperFor(type);
     }
 
-    protected void processParsedObject(Object object, HttpResponse httpResponse) {
+    protected void processParsedObject(@NotNull Object parsed, @NotNull HttpResponse httpResponse) {
 
     }
 
+    @NotNull
     private Object parseOrThrow(HttpResponse response, ParameterizedType<?> type)
             throws IOException, RestConverter.ConvertException {
         try {
@@ -100,8 +102,9 @@ public class LoganSquareConverterFactory<E extends Exception> extends RestConver
             this.type = RestFu_ParameterizedTypeAccessor.create(type);
         }
 
+        @NotNull
         @Override
-        public Object convert(HttpResponse httpResponse) throws IOException, ConvertException, E {
+        public Object convert(@NotNull HttpResponse httpResponse) throws IOException, ConvertException, E {
             final Object object = factory.parseOrThrow(httpResponse, type);
             factory.processParsedObject(object, httpResponse);
             return object;
@@ -117,8 +120,9 @@ public class LoganSquareConverterFactory<E extends Exception> extends RestConver
             this.type = RestFu_ParameterizedTypeAccessor.create(type);
         }
 
+        @NotNull
         @Override
-        public Body convert(Object request) throws IOException, ConvertException, E {
+        public Body convert(@NotNull Object request) throws IOException, ConvertException, E {
             final String json;
             if (type.rawType == List.class) {
                 final Class<?> cls = type.typeParameters.get(0).rawType;

@@ -1,5 +1,7 @@
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -8,9 +10,10 @@ import java.io.IOException;
  */
 public interface HttpCall extends Closeable {
 
+    @NotNull
     HttpResponse execute() throws IOException;
 
-    void enqueue(HttpCallback callback);
+    void enqueue(@NotNull HttpCallback callback);
 
     void cancel();
 
