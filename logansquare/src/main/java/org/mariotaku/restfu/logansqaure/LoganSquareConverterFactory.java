@@ -1,22 +1,3 @@
-/*
- *             Twidere - Twitter client for Android
- *
- *  Copyright (C) 2012-2017 Mariotaku Lee <mariotaku.lee@gmail.com>
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.mariotaku.restfu.logansqaure;
 
 import com.bluelinelabs.logansquare.JsonMapper;
@@ -43,23 +24,23 @@ import java.util.Map;
 public class LoganSquareConverterFactory<E extends Exception> extends RestConverter.SimpleFactory<E> {
 
     @Override
-    public RestConverter<HttpResponse, ?, E> forResponse(Type type) throws RestConverter.ConvertException {
+    public RestConverter<HttpResponse, ?, E> forResponse(@NotNull Type type) throws RestConverter.ConvertException {
         return new JsonResponseConverter<>(this, type);
     }
 
     @Override
-    public RestConverter<?, Body, E> forRequest(Type type) throws RestConverter.ConvertException {
+    public RestConverter<?, Body, E> forRequest(@NotNull Type type) throws RestConverter.ConvertException {
         if (SimpleBody.supports(type)) {
             return new SimpleBodyConverter<>(type);
         }
         return new JsonRequestConverter<>(this, type);
     }
 
-    protected <T> JsonMapper<T> mapperFor(ParameterizedType<T> type) {
+    protected <T> JsonMapper<T> mapperFor(@NotNull ParameterizedType<T> type) {
         return LoganSquare.mapperFor(type);
     }
 
-    protected <T> JsonMapper<T> mapperFor(Class<T> type) {
+    protected <T> JsonMapper<T> mapperFor(@NotNull Class<T> type) {
         return LoganSquare.mapperFor(type);
     }
 
@@ -68,7 +49,7 @@ public class LoganSquareConverterFactory<E extends Exception> extends RestConver
     }
 
     @NotNull
-    private Object parseOrThrow(HttpResponse response, ParameterizedType<?> type)
+    private Object parseOrThrow(@NotNull HttpResponse response, @NotNull ParameterizedType<?> type)
             throws IOException, RestConverter.ConvertException {
         try {
             final Object parsed;
