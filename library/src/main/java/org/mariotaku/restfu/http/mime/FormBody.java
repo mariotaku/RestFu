@@ -33,6 +33,8 @@ public class FormBody implements Body {
     private final MultiValueMap<String> forms;
     private final Charset charset;
 
+    private byte[] bytes;
+
     public FormBody(MultiValueMap<String> forms) {
         this.forms = forms;
         this.charset = Charset.forName("UTF-8");
@@ -47,8 +49,6 @@ public class FormBody implements Body {
     public String contentEncoding() {
         return null;
     }
-
-    private byte[] bytes;
 
     private void toRawBytes() {
         if (bytes != null) return;

@@ -23,10 +23,7 @@ import org.mariotaku.restfu.http.BodyType;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.RawValue;
 import org.mariotaku.restfu.http.ValueMap;
-import org.mariotaku.restfu.http.mime.Body;
-import org.mariotaku.restfu.http.mime.FormBody;
-import org.mariotaku.restfu.http.mime.MultipartBody;
-import org.mariotaku.restfu.http.mime.StringBody;
+import org.mariotaku.restfu.http.mime.*;
 
 import java.io.IOException;
 import java.util.Map;
@@ -113,6 +110,10 @@ public final class RestRequest {
                 bodyCache = file.body(converterFactory);
                 break;
             }
+            case BodyType.CUSTOM: {
+                bodyCache = getBodyConverter().convert(getParams(), this.bodyType.converterArgs());
+                break;
+            }
         }
         return bodyCache;
     }
@@ -154,6 +155,15 @@ public final class RestRequest {
     public MultiValueMap<Body> getRequestParams() {
         if (hasBody) return params;
         return null;
+    }
+
+    @NotNull
+    private BodyConverter getBodyConverter() {
+        try {
+            return bodyType.converter().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

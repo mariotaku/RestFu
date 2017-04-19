@@ -16,6 +16,9 @@
 
 package org.mariotaku.restfu.http;
 
+import org.mariotaku.restfu.http.mime.BodyConverter;
+import org.mariotaku.restfu.http.mime.DefaultBodyConverter;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,5 +32,9 @@ import java.lang.annotation.Target;
 public @interface BodyType {
     String value();
 
-    String FORM = "form", MULTIPART = "multipart", RAW = "raw";
+    Class<? extends BodyConverter> converter() default DefaultBodyConverter.class;
+
+    String[] converterArgs() default {};
+
+    String FORM = "form", MULTIPART = "multipart", RAW = "raw", CUSTOM = "custom";
 }
