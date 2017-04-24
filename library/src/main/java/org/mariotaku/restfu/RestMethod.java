@@ -474,6 +474,10 @@ public final class RestMethod<E extends Exception> {
                     return new String[]{value == Boolean.TRUE ? "1" : "0"};
                 case BooleanEncoding.KEY_IF_TRUE:
                     return value == Boolean.TRUE ? new String[]{null} : new String[0];
+                case BooleanEncoding.IGNORE_IF_FALSE:
+                    return value == Boolean.TRUE ? new String[]{"true"} : new String[0];
+                case BooleanEncoding.IGNORE_IF_TRUE:
+                    return value == Boolean.FALSE ? new String[]{"false"} : new String[0];
             }
         }
         return new String[]{RestFuUtils.toString(value, delimiter)};
