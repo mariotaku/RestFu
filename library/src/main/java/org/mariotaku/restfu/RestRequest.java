@@ -28,14 +28,20 @@ import org.mariotaku.restfu.http.mime.*;
 import java.io.IOException;
 import java.util.Map;
 
+@SuppressWarnings("WeakerAccess")
 public final class RestRequest {
 
+    @NotNull
     private final String method;
     private final boolean hasBody;
+    @NotNull
     private final String path;
 
+    @NotNull
     private final MultiValueMap<String> headers;
+    @NotNull
     private final MultiValueMap<String> queries;
+    @Nullable
     private final MultiValueMap<Body> params;
     private final RawValue file;
     private final BodyType bodyType;
@@ -44,11 +50,10 @@ public final class RestRequest {
     private Body bodyCache;
     private String inferredBodyType;
 
-    public RestRequest(String method, boolean hasBody, String path,
-            MultiValueMap<String> headers,
-            MultiValueMap<String> queries,
-            MultiValueMap<Body> params,
-            RawValue file, BodyType bodyType, Map<String, Object> extras) {
+    public RestRequest(@NotNull String method, boolean hasBody, @NotNull String path,
+            @NotNull MultiValueMap<String> headers, @NotNull MultiValueMap<String> queries,
+            @Nullable MultiValueMap<Body> params, @Nullable RawValue file, @Nullable BodyType bodyType,
+            @NotNull Map<String, Object> extras) {
         this.method = method;
         this.hasBody = hasBody;
         this.path = path;
@@ -69,21 +74,26 @@ public final class RestRequest {
 
     private String inferBodyType() {
         if (file != null) return BodyType.RAW;
-        for (Pair<String, Body> pair : getParams().toList()) {
+        final MultiValueMap<Body> params = getParams();
+        if (params == null) return BodyType.FORM;
+        for (Pair<String, Body> pair : params.toList()) {
             if (pair.second == null) continue;
             if (!(pair.second instanceof StringBody)) return BodyType.MULTIPART;
         }
         return BodyType.FORM;
     }
 
+    @NotNull
     public MultiValueMap<String> getQueries() {
         return queries;
     }
 
+    @Nullable
     public MultiValueMap<Body> getParams() {
         return params;
     }
 
+    @NotNull
     public MultiValueMap<String> getHeaders() {
         return headers;
     }
@@ -97,68 +107,46 @@ public final class RestRequest {
         if (bodyCache != null) return bodyCache;
         final String bodyType = getBodyType();
         if (bodyType == null) return null;
+        final MultiValueMap<Body> params = getParams();
         switch (bodyType) {
             case BodyType.FORM: {
-                bodyCache = FormBody.wrap(getParams());
+                if (params == null) return null;
+                bodyCache = FormBody.wrap(params);
                 break;
             }
             case BodyType.MULTIPART: {
-                bodyCache = new MultipartBody(getParams().toList());
+                if (params == null) return null;
+                bodyCache = new MultipartBody(params.toList());
                 break;
             }
             case BodyType.RAW: {
+                if (file == null) return null;
                 bodyCache = file.body(converterFactory);
                 break;
             }
             case BodyType.CUSTOM: {
-                bodyCache = getBodyConverter().convert(getParams(), this.bodyType.converterArgs());
+                if (params == null) return null;
+                assert this.bodyType != null;
+                bodyCache = getBodyConverter().convert(params, this.bodyType.converterArgs());
                 break;
             }
         }
         return bodyCache;
     }
 
+    @NotNull
     public String getPath() {
         return path;
     }
 
+    @NotNull
     public String getMethod() {
         return method;
     }
 
-    /**
-     * @return {@link #queries} + {@link #params} If this request doesn't allows body, {@link #queries} otherwise
-     */
-    public MultiValueMap<String> getRequestQueries() {
-        if (hasBody) {
-            return queries;
-        }
-        MultiValueMap<String> result = new MultiValueMap<>();
-        MultiValueMap<String> queries = getQueries();
-        if (queries != null) {
-            result.addFrom(queries);
-        }
-        MultiValueMap<Body> params = getParams();
-        if (params != null) {
-            for (String key : params.keySet()) {
-                for (Body body : params.get(key)) {
-                    result.add(key, ((StringBody) body).value());
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @return {@link #params} If this request allows body, <code>null</code> otherwise
-     */
-    public MultiValueMap<Body> getRequestParams() {
-        if (hasBody) return params;
-        return null;
-    }
-
     @NotNull
     private BodyConverter getBodyConverter() {
+        assert this.bodyType != null;
         try {
             return bodyType.converter().newInstance();
         } catch (Exception e) {

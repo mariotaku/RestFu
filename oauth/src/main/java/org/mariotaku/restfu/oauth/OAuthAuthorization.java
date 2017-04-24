@@ -123,8 +123,8 @@ public class OAuthAuthorization implements Authorization {
         final OAuthEndpoint oauthEndpoint = (OAuthEndpoint) endpoint;
         final String method = request.getMethod();
         final String url = Endpoint.constructUrl(oauthEndpoint.getSignUrl(), request);
-        final MultiValueMap<String> queries = request.getRequestQueries();
-        final MultiValueMap<Body> params = request.getRequestParams();
+        final MultiValueMap<String> queries = request.getQueries();
+        final MultiValueMap<Body> params = request.getParams();
         final List<Pair<String, String>> encodeParams = generateOAuthParams(oauthToken, oauthTokenSecret,
                 method, url, queries, params, request.getBodyType());
         final StringBuilder headerBuilder = new StringBuilder();

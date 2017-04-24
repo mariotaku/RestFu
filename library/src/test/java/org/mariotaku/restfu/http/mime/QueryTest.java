@@ -40,6 +40,22 @@ public class QueryTest {
         }
     }
 
+
+    @Test
+    public void testBooleanKeyIfTrueQuery() throws Exception {
+        TestInterface ti = getTestInterface();
+        try {
+            ti.testBooleanKeyIfTrueQuery(true);
+        } catch (HttpRequestInfoException e) {
+            Assert.assertEquals("https://example.com/test/query?name", e.request.getUrl());
+        }
+        try {
+            ti.testBooleanKeyIfTrueQuery(false);
+        } catch (HttpRequestInfoException e) {
+            Assert.assertEquals("https://example.com/test/query", e.request.getUrl());
+        }
+    }
+
     private TestInterface getTestInterface() {
         RestAPIFactory<HttpRequestInfoException> factory = new RestAPIFactory<>();
         factory.setEndpoint(new Endpoint("https://example.com"));

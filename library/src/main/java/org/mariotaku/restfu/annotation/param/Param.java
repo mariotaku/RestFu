@@ -32,4 +32,6 @@ public @interface Param {
     char arrayDelimiter() default '\0';
 
     boolean ignoreOnNull() default true;
+
+    int booleanEncoding() default BooleanEncoding.TRUE_FALSE;
 }

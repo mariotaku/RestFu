@@ -41,7 +41,7 @@ public class Endpoint {
     }
 
     public static String constructUrl(@NotNull String endpoint, @NotNull RestRequest restRequest) {
-        return constructUrl(endpoint, restRequest.getPath(), restRequest.getRequestQueries());
+        return constructUrl(endpoint, restRequest.getPath(), restRequest.getQueries());
     }
 
     public String construct(String path, MultiValueMap<String> queries) {
@@ -91,7 +91,8 @@ public class Endpoint {
         if (queries == null || queries.isEmpty()) return url;
         final StringBuilder urlBuilder = new StringBuilder(url);
         urlBuilder.append('?');
-        RestFuUtils.append(urlBuilder, queries, Charset.forName("UTF-8"));
+        int numAdded = RestFuUtils.append(urlBuilder, queries, Charset.forName("UTF-8"));
+        if (numAdded == 0) return url;
         return urlBuilder.toString();
     }
 

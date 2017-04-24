@@ -43,49 +43,59 @@ public class RestAPIFactory<E extends Exception> {
 
     }
 
+    @SuppressWarnings("unused")
     public void setConstantPool(ValueMap constantPool) {
         this.constantPool = constantPool;
     }
 
+    @SuppressWarnings("unused")
     public void setEndpoint(@NotNull Endpoint endpoint) {
         this.endpoint = endpoint;
     }
 
+    @SuppressWarnings("unused")
     public void setAuthorization(Authorization authorization) {
         this.authorization = authorization;
     }
 
+    @SuppressWarnings("unused")
     public void setHttpClient(@NotNull RestHttpClient restClient) {
         this.httpClient = restClient;
     }
 
-    public void setHttpRequestFactory(@NotNull HttpRequest.Factory factory) {
+    @SuppressWarnings("unused")
+    public void setHttpRequestFactory(@NotNull HttpRequest.Factory<E> factory) {
         this.httpRequestFactory = factory;
     }
 
+    @SuppressWarnings("unused")
     public void setExceptionFactory(@NotNull ExceptionFactory<E> factory) {
         this.exceptionFactory = factory;
     }
 
+    @SuppressWarnings("unused")
     public void setRestConverterFactory(@NotNull RestConverter.Factory<E> restConverterFactory) {
         this.restConverterFactory = restConverterFactory;
     }
 
+    @SuppressWarnings("unused")
     public void setRestRequestFactory(@NotNull RestRequest.Factory<E> restRequestFactory) {
         this.restRequestFactory = restRequestFactory;
     }
 
+    @SuppressWarnings("unused")
     public void setResultDispatcher(@NotNull ResultDispatcher<E> resultDispatcher) {
         this.resultDispatcher = resultDispatcher;
     }
 
+    @SuppressWarnings("unused")
     public static RestClient getRestClient(Object obj) {
         final InvocationHandler handler = Proxy.getInvocationHandler(obj);
         if (!(handler instanceof RestClient)) throw new IllegalArgumentException();
         return (RestClient) handler;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "unused"})
     public <T> T build(Class<T> cls) {
         final ClassLoader classLoader = cls.getClassLoader();
         final Class[] interfaces = new Class[]{cls};
@@ -117,11 +127,11 @@ public class RestAPIFactory<E extends Exception> {
         private final RestHttpClient restClient;
         private final ValueMap constantPoll;
 
-        public RestInvocationHandler(Endpoint endpoint, Authorization authorization,
+        RestInvocationHandler(Endpoint endpoint, Authorization authorization,
                 RestHttpClient restClient,
                 RestConverter.Factory<E> converterFactory,
                 RestRequest.Factory<E> restRequestFactory,
-                HttpRequest.Factory httpRequestFactory,
+                HttpRequest.Factory<E> httpRequestFactory,
                 ExceptionFactory<E> exceptionFactory,
                 ValueMap constantPoll, ResultDispatcher<E> resultDispatcher) {
             this.endpoint = endpoint;

@@ -16,6 +16,7 @@
 
 package org.mariotaku.restfu;
 
+import org.mariotaku.restfu.annotation.param.BooleanEncoding;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.StringBody;
@@ -188,7 +189,8 @@ public class RestFuUtils {
         }
     }
 
-    public static void append(StringBuilder sb, MultiValueMap<String> queries, Charset charset) {
+    public static int append(StringBuilder sb, MultiValueMap<String> queries, Charset charset) {
+        int numAdded = 0;
         final List<Pair<String, String>> list = queries.toList();
         for (int i = 0, j = list.size(); i < j; i++) {
             if (i != 0) {
@@ -200,7 +202,9 @@ public class RestFuUtils {
                 sb.append('=');
                 UrlSerialization.QUERY.serialize(form.second, charset, sb);
             }
+            numAdded++;
         }
+        return numAdded;
     }
 
     public static String sanitizeHeader(String header) {

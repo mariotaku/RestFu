@@ -2,6 +2,7 @@ package org.mariotaku.restfu.http.mime;
 
 import org.mariotaku.restfu.annotation.method.GET;
 import org.mariotaku.restfu.annotation.method.POST;
+import org.mariotaku.restfu.annotation.param.BooleanEncoding;
 import org.mariotaku.restfu.annotation.param.Header;
 import org.mariotaku.restfu.annotation.param.Param;
 import org.mariotaku.restfu.annotation.param.Query;
@@ -26,6 +27,10 @@ public interface TestInterface {
 
     @GET("/test/query")
     void testParamAsQuery(@Param(value = "name") String value) throws HttpRequestInfoException;
+
+    @GET("/test/query")
+    void testBooleanKeyIfTrueQuery(@Param(value = "name", booleanEncoding = BooleanEncoding.KEY_IF_TRUE) boolean value)
+            throws HttpRequestInfoException;
 
     @POST("/test/param")
     @BodyType(BodyType.FORM)

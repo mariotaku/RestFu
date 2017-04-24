@@ -1,6 +1,8 @@
 package org.mariotaku.restfu;
 
 /**
+ * A convenience class to represent tuple.
+ * <p>
  * Created by mariotaku on 15/11/11.
  */
 public class Pair<F, S> {
