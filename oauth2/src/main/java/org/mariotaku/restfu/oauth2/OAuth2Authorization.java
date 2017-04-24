@@ -17,7 +17,7 @@ public class OAuth2Authorization implements Authorization {
     }
 
     @Override
-    public String getHeader(Endpoint endpoint, RestRequest info) {
+    public String getHeader(@NotNull Endpoint endpoint, @NotNull RestRequest info) {
         return "Bearer " + accessToken;
     }
 

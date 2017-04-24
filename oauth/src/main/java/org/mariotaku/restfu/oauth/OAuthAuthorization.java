@@ -24,6 +24,7 @@ import java.util.*;
 /**
  * Created by mariotaku on 15/2/4.
  */
+@SuppressWarnings("unused")
 public class OAuthAuthorization implements Authorization {
 
     private static final UrlSerialization OAUTH_ENCODING = new UrlSerialization() {
@@ -70,15 +71,18 @@ public class OAuthAuthorization implements Authorization {
     @Nullable
     private final String realm;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret) {
         this(consumerKey, consumerSecret, null);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret,
             @Nullable OAuthToken oauthToken) {
         this(consumerKey, consumerSecret, oauthToken, null);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public OAuthAuthorization(@NotNull String consumerKey, @NotNull String consumerSecret,
             @Nullable OAuthToken oauthToken, @Nullable String realm) {
         this.consumerKey = consumerKey;
@@ -87,36 +91,40 @@ public class OAuthAuthorization implements Authorization {
         this.realm = realm;
     }
 
+    @SuppressWarnings("unused")
     @NotNull
     public String getConsumerKey() {
         return consumerKey;
     }
 
+    @SuppressWarnings("unused")
     @NotNull
     public String getConsumerSecret() {
         return consumerSecret;
     }
 
+    @SuppressWarnings("unused")
     @Nullable
     public OAuthToken getOauthToken() {
         return oauthToken;
     }
 
+    @SuppressWarnings("unused")
     @Nullable
     public String getRealm() {
         return realm;
     }
 
     @Override
-    public String getHeader(Endpoint endpoint, RestRequest request) {
+    public String getHeader(@NotNull Endpoint endpoint, @NotNull RestRequest request) {
         if (!(endpoint instanceof OAuthEndpoint))
             throw new IllegalArgumentException("OAuthEndpoint required");
         final Map<String, Object> extras = request.getExtras();
-        final String oauthToken, oauthTokenSecret;
+        String oauthToken = null, oauthTokenSecret = null;
         if (this.oauthToken != null) {
             oauthToken = this.oauthToken.getOauthToken();
             oauthTokenSecret = this.oauthToken.getOauthTokenSecret();
-        } else {
+        } else if (extras != null) {
             oauthToken = (String) extras.get("oauth_token");
             oauthTokenSecret = (String) extras.get("oauth_token_secret");
         }
@@ -152,12 +160,9 @@ public class OAuthAuthorization implements Authorization {
         return true;
     }
 
-    private String generateOAuthSignature(String method, String url,
-            String oauthNonce, long timestamp,
-            String oauthToken, String oauthTokenSecret,
-            MultiValueMap<String> queries,
-            MultiValueMap<Body> params,
-            String bodyType) {
+    private String generateOAuthSignature(@NotNull String method, @NotNull String url, @NotNull String oauthNonce,
+            long timestamp, @Nullable String oauthToken, @Nullable String oauthTokenSecret,
+            @Nullable MultiValueMap<String> queries, @Nullable MultiValueMap<Body> params, @Nullable String bodyType) {
         final List<String> encodeParams = new ArrayList<>();
         encodeParams.add(encodeOAuthParameter("oauth_consumer_key", consumerKey));
         encodeParams.add(encodeOAuthParameter("oauth_nonce", oauthNonce));
@@ -216,11 +221,10 @@ public class OAuthAuthorization implements Authorization {
         }
     }
 
-    private List<Pair<String, String>> generateOAuthParams(String oauthToken,
-            String oauthTokenSecret, String method,
-            String url, MultiValueMap<String> queries,
-            MultiValueMap<Body> params,
-            String bodyType) {
+    private List<Pair<String, String>> generateOAuthParams(@Nullable final String oauthToken,
+            @Nullable final String oauthTokenSecret, @NotNull final String method, @NotNull final String url,
+            @Nullable final MultiValueMap<String> queries, @Nullable final MultiValueMap<Body> params,
+            @Nullable final String bodyType) {
         final String oauthNonce = generateOAuthNonce();
         final long timestamp = System.currentTimeMillis() / 1000;
         final String oauthSignature = generateOAuthSignature(method, url, oauthNonce, timestamp, oauthToken,

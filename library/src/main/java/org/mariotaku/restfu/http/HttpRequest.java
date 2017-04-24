@@ -125,8 +125,10 @@ public final class HttpRequest {
                 Authorization authorization, RestConverter.Factory<E> converterFactory) throws E,
                 RestConverter.ConvertException, IOException {
             final String url = Endpoint.constructUrl(endpoint.getUrl(), requestInfo);
-            final MultiValueMap<String> headers = requestInfo.getHeaders();
-
+            MultiValueMap<String> headers = requestInfo.getHeaders();
+            if (headers == null) {
+                headers = new MultiValueMap<>();
+            }
             if (authorization != null && authorization.hasAuthorization()) {
                 headers.add("Authorization", authorization.getHeader(endpoint, requestInfo));
             }

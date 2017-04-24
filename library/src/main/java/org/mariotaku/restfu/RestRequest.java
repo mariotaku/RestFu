@@ -37,9 +37,9 @@ public final class RestRequest {
     @NotNull
     private final String path;
 
-    @NotNull
+    @Nullable
     private final MultiValueMap<String> headers;
-    @NotNull
+    @Nullable
     private final MultiValueMap<String> queries;
     @Nullable
     private final MultiValueMap<Body> params;
@@ -51,9 +51,9 @@ public final class RestRequest {
     private String inferredBodyType;
 
     public RestRequest(@NotNull String method, boolean hasBody, @NotNull String path,
-            @NotNull MultiValueMap<String> headers, @NotNull MultiValueMap<String> queries,
+            @Nullable MultiValueMap<String> headers, @Nullable MultiValueMap<String> queries,
             @Nullable MultiValueMap<Body> params, @Nullable RawValue file, @Nullable BodyType bodyType,
-            @NotNull Map<String, Object> extras) {
+            @Nullable Map<String, Object> extras) {
         this.method = method;
         this.hasBody = hasBody;
         this.path = path;
@@ -83,7 +83,7 @@ public final class RestRequest {
         return BodyType.FORM;
     }
 
-    @NotNull
+    @Nullable
     public MultiValueMap<String> getQueries() {
         return queries;
     }
@@ -93,11 +93,12 @@ public final class RestRequest {
         return params;
     }
 
-    @NotNull
+    @Nullable
     public MultiValueMap<String> getHeaders() {
         return headers;
     }
 
+    @Nullable
     public Map<String, Object> getExtras() {
         return extras;
     }

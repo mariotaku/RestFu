@@ -16,13 +16,14 @@
 
 package org.mariotaku.restfu.http;
 
+import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestRequest;
 
 /**
  * Created by mariotaku on 15/2/4.
  */
 public interface Authorization {
-    String getHeader(Endpoint endpoint, RestRequest info);
+    String getHeader(@NotNull Endpoint endpoint, @NotNull RestRequest info);
 
     boolean hasAuthorization();
 }
