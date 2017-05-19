@@ -18,6 +18,7 @@ package org.mariotaku.restfu.okhttp3;
 
 import okhttp3.*;
 import okio.BufferedSink;
+import okio.InflaterSource;
 import okio.Okio;
 import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.Pair;
@@ -28,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 /**
  * Created by mariotaku on 16/2/4.
@@ -75,7 +78,7 @@ public class OkHttpRestClient implements RestHttpClient {
 
         public OkToRestResponse(Response response) {
             this.response = response;
-            this.body = new OkToRestResponseBody(response.body());
+            this.body = new OkToRestResponseBody(response.body(), response.header("Content-Encoding"));
         }
 
         @Override
@@ -113,9 +116,11 @@ public class OkHttpRestClient implements RestHttpClient {
     private static class OkToRestResponseBody implements Body {
 
         private final ResponseBody body;
+        private final String encoding;
 
-        public OkToRestResponseBody(ResponseBody body) {
+        public OkToRestResponseBody(ResponseBody body, String encoding) {
             this.body = body;
+            this.encoding = encoding;
         }
 
         @Override
@@ -138,13 +143,21 @@ public class OkHttpRestClient implements RestHttpClient {
         @Override
         public long writeTo(OutputStream os) throws IOException {
             final BufferedSink sink = Okio.buffer(Okio.sink(os));
-            final long result = sink.writeAll(body.source());
+            final long result;
+            if ("deflate".equals(encoding)) {
+                result = sink.writeAll(new InflaterSource(body.source(), new Inflater(true)));
+            } else {
+                result = sink.writeAll(body.source());
+            }
             sink.flush();
             return result;
         }
 
         @Override
         public InputStream stream() throws IOException {
+            if ("deflate".equals(encoding)) {
+                return new InflaterInputStream(body.byteStream(), new Inflater(true));
+            }
             return body.byteStream();
         }
 
