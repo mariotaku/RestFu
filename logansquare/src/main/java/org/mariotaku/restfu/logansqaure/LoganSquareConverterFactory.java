@@ -70,7 +70,7 @@ public class LoganSquareConverterFactory<E extends Exception> extends RestConver
             }
             return parsed;
         } catch (JsonParseException e) {
-            throw new RestConverter.ConvertException("Malformed JSON Data");
+            throw new RestConverter.ConvertException("Malformed JSON Data", e);
         }
     }
 
