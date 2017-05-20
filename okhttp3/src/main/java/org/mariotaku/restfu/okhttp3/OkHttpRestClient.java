@@ -145,7 +145,7 @@ public class OkHttpRestClient implements RestHttpClient {
             final BufferedSink sink = Okio.buffer(Okio.sink(os));
             final long result;
             if ("deflate".equals(encoding)) {
-                result = sink.writeAll(new InflaterSource(body.source(), new Inflater(true)));
+                result = sink.writeAll(Okio.source(new DeflateInputStream(body.byteStream())));
             } else {
                 result = sink.writeAll(body.source());
             }
@@ -156,7 +156,7 @@ public class OkHttpRestClient implements RestHttpClient {
         @Override
         public InputStream stream() throws IOException {
             if ("deflate".equals(encoding)) {
-                return new InflaterInputStream(body.byteStream(), new Inflater(true));
+                return new DeflateInputStream(body.byteStream());
             }
             return body.byteStream();
         }
