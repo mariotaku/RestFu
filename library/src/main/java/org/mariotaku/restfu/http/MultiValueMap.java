@@ -93,6 +93,14 @@ public final class MultiValueMap<V> {
         }
     }
 
+    public final void removeAll(@NotNull String key) {
+        map.remove(key);
+    }
+
+    public final void clear() {
+        map.clear();
+    }
+
     public void addFrom(@NotNull MultiValueMap<V> another) {
         for (Map.Entry<String, List<V>> entry : another.map.entrySet()) {
             addAll(entry.getKey(), entry.getValue());
