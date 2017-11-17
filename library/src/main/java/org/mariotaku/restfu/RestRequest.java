@@ -19,6 +19,7 @@ package org.mariotaku.restfu;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.http.BodyType;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.RawValue;

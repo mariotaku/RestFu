@@ -17,7 +17,7 @@
 package org.mariotaku.restfu.http.mime;
 
 
-import org.mariotaku.restfu.Pair;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.RestFuUtils;
 import org.mariotaku.restfu.http.ContentType;
 import org.mariotaku.restfu.http.MultiValueMap;

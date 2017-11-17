@@ -18,8 +18,8 @@ package org.mariotaku.restfu.http;
 
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.annotation.param.Raw;
-import org.mariotaku.restfu.http.mime.SimpleBody;
 import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.SimpleBody;
 
 import java.io.IOException;
 

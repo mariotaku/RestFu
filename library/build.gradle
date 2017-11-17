@@ -17,8 +17,9 @@
 apply plugin: 'java'
 
 dependencies {
-    compile 'com.github.mariotaku.CommonsLibrary:io:0.9.11'
-    compile 'org.jetbrains:annotations:13.0'
+    compile 'com.github.mariotaku.CommonsLibrary:io:0.9.21'
+    compile 'com.github.mariotaku.CommonsLibrary:collection:0.9.21'
+    compile 'org.jetbrains:annotations:15.0'
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'

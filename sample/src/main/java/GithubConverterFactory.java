@@ -2,8 +2,8 @@ import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 import org.mariotaku.restfu.RestConverter;
 import org.mariotaku.restfu.http.HttpResponse;
-import org.mariotaku.restfu.http.mime.SimpleBody;
 import org.mariotaku.restfu.http.mime.Body;
+import org.mariotaku.restfu.http.mime.SimpleBody;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

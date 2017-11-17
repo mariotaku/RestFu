@@ -1,8 +1,8 @@
 package org.mariotaku.restfu.urlconnection;
 
 import org.jetbrains.annotations.NotNull;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.commons.io.StreamUtils;
-import org.mariotaku.restfu.Pair;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
 

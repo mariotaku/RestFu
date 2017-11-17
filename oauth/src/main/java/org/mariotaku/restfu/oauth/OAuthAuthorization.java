@@ -2,7 +2,7 @@ package org.mariotaku.restfu.oauth;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mariotaku.restfu.Pair;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.RestRequest;
 import org.mariotaku.restfu.http.Authorization;
 import org.mariotaku.restfu.http.BodyType;

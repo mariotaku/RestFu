@@ -17,7 +17,7 @@
 package org.mariotaku.restfu.http;
 
 
-import org.mariotaku.restfu.Pair;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.RestFuUtils;
 
 import java.nio.charset.Charset;

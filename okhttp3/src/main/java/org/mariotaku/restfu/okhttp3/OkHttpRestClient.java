@@ -18,10 +18,9 @@ package org.mariotaku.restfu.okhttp3;
 
 import okhttp3.*;
 import okio.BufferedSink;
-import okio.InflaterSource;
 import okio.Okio;
 import org.jetbrains.annotations.NotNull;
-import org.mariotaku.restfu.Pair;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.http.*;
 import org.mariotaku.restfu.http.mime.Body;
 
@@ -29,8 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 /**
  * Created by mariotaku on 16/2/4.

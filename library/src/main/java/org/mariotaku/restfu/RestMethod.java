@@ -18,6 +18,7 @@ package org.mariotaku.restfu;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.annotation.HttpMethod;
 import org.mariotaku.restfu.annotation.param.*;
 import org.mariotaku.restfu.http.*;

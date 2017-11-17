@@ -16,7 +16,7 @@
 
 package org.mariotaku.restfu;
 
-import org.mariotaku.restfu.annotation.param.BooleanEncoding;
+import org.mariotaku.commons.collection.Pair;
 import org.mariotaku.restfu.http.MultiValueMap;
 import org.mariotaku.restfu.http.mime.Body;
 import org.mariotaku.restfu.http.mime.StringBody;
