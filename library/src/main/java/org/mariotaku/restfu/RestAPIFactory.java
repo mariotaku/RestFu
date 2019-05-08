@@ -202,7 +202,7 @@ public class RestAPIFactory<E extends Exception> {
             }
         }
 
-        private <T> Object onResult(Type returnType, @NotNull HttpResponse httpResponse,
+        private <T> Object onResult(@NotNull Type returnType, @NotNull HttpResponse httpResponse,
                 @Nullable final Callback<?, E> callback)
                 throws RestConverter.ConvertException, E, IOException {
             if (callback == null) {
@@ -233,7 +233,6 @@ public class RestAPIFactory<E extends Exception> {
             if (callback == null) {
                 throw exception;
             }
-            //noinspection unchecked
             resultDispatcher.dispatchException(callback, exception);
             return null;
         }

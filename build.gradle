@@ -1,6 +1,6 @@
 allprojects {
     group 'com.github.mariotaku.RestFu'
-    version = '0.9.61'
+    version = '0.9.62'
 
     repositories {
         mavenLocal()
@@ -11,18 +11,18 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
     sourceCompatibility = JavaVersion.VERSION_1_7
     targetCompatibility = JavaVersion.VERSION_1_7
 
     task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
+        archiveClassifier.set('sources')
         from sourceSets.main.allSource
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
+        archiveClassifier.set('javadoc')
     }
 
     artifacts {
